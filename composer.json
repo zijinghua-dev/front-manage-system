@@ -1,0 +1,15 @@
+{
+    "name": "zijinghua/front-manage-system",
+    "description": "front manage system",
+    "type": "project",
+    "require": {
+        "tcg/voyager": "1.3"
+    },
+    "authors": [
+        {
+            "name": "zijinghua",
+            "email": "systemadmin@d2p.shop"
+        }
+    ],
+    "minimum-stability": "dev"
+}
