@@ -1,5 +1,5 @@
 {
-    "name": "zijinghua/front-manage-system",
+    "name": "zijinghua/zvoyager",
     "description": "front manage system",
     "type": "project",
     "require": {
@@ -8,7 +8,7 @@
     "authors": [
         {
             "name": "zijinghua",
-            "email": "systemadmin@d2p.shop"
+            "email": "sysadmin@haokuaidian.cn"
         }
     ],
     "minimum-stability": "dev"
