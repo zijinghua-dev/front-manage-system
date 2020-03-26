@@ -1,5 +1,5 @@
 {
-    "name": "zijinghua/front-manage-system",
+    "name": "zijinghua/zvoyager",
     "description": "front manage system",
     "type": "library",
     "require": {
@@ -11,9 +11,11 @@
             "Zijinhua\\FM\\": "src/"
         }
     },
-    "authors": [{
-        "name": "zijinghua",
-        "email": "systemadmin@d2p.shop"
-    }],
+    "authors": [
+        {
+            "name": "zijinghua",
+            "email": "sysadmin@haokuaidian.cn"
+        }
+    ],
     "minimum-stability": "dev"
 }
