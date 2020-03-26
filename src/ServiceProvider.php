@@ -1,5 +1,5 @@
 <?php
-namespace Zijinghua\FM;
+namespace Zijinghua\Zvoyager;
 
 use Illuminate\Support;
 

@@ -1,15 +1,10 @@
 <?php
-namespace Zijinghua\FM;
+namespace Zijinghua\Zvoyager;
 
 class Base
 {
     public static function snackRoute()
     {
         return require __DIR__.'/../routes/snack.php';
-    }
-
-    public static function test()
-    {
-        echo '132';
     }
 }

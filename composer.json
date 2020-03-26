@@ -17,5 +17,12 @@
             "email": "sysadmin@haokuaidian.cn"
         }
     ],
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zijinghua\\Zvoyager\\ServiceProvider"
+            ]
+        }
+    }
 }
