@@ -4,6 +4,7 @@ namespace Zijinghua\Zvoyager\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Zijinghua\Zvoyager\Base;
 
 class Install extends Command
 {
@@ -43,7 +44,7 @@ class Install extends Command
         if (false === strpos($contents, 'Base::snackRoute()')) {
             $filesystem->append(
                 base_path('routes/api.php'),
-                "\n\nRoute::group(['middleware' => 'api', 'prefix' => 'v1'], function() {\n".
+                "\n\nRoute::group(['middleware' => 'api'], function() {\n".
                 "\tZijinghua\Zvoyager\Base::snackRoute();\n});\n"
             );
         }

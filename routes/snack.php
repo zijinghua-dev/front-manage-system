@@ -8,15 +8,15 @@
 
 use TCG\Voyager\Models\DataType;
 
+$pageApiVersion = \Zijinghua\Zvoyager\Base::getPageApiVersion();
+$controllerNamespace = config('zvoyager.controller.namespace').'\\'.$pageApiVersion.'\\';
 try {
     foreach (DataType::all() as $dataType) {
-        if (\Illuminate\Support\Str::startsWith($dataType->model_name, ['App', '\App'])) {
-            $breadController = $dataType->controller
-                ? Str::start($dataType->controller, '\\')
-                : 'Api\V1\Page\BaseController';
+        $breadController = $dataType->controller
+            ? Str::start($dataType->controller, '\\')
+            : $controllerNamespace.'BaseController';
 
-            Route::resource($dataType->slug, $breadController);
-        }
+        Route::resource(strtolower($pageApiVersion).'/'.$dataType->slug, $breadController);
     }
 } catch (\InvalidArgumentException $e) {
     throw new \InvalidArgumentException("Custom routes hasn't been configured because: ".$e->getMessage(), 1);
