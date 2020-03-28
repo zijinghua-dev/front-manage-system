@@ -9,15 +9,12 @@ class ServiceProvider extends Support\ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->registerConsoleCommands();
+            $this->registerPublishableResources();
         }
     }
 
     public function boot()
     {
-        if ($this->app->runningInConsole()) {
-            $this->publishResources();
-        }
-
         $this->mergeConfig();
     }
 
@@ -31,11 +28,11 @@ class ServiceProvider extends Support\ServiceProvider
         return realpath(__DIR__.'/../publishable');
     }
 
-    protected function publishResources()
+    protected function registerPublishableResources()
     {
         $publishable = [
             'config' => [
-                $this->getPublishablePath()."/config/zvoyager.php" => config_path('voyager.php'),
+                $this->getPublishablePath()."/config/zvoyager.php" => config_path('zvoyager.php'),
             ],
         ];
 
