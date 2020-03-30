@@ -16,7 +16,7 @@ try {
             ? Str::start($dataType->controller, '\\')
             : $controllerNamespace.'BaseController';
 
-        Route::resource(strtolower($pageApiVersion).'/'.$dataType->slug, $breadController);
+        Route::resource($dataType->slug, $breadController);
     }
 } catch (\InvalidArgumentException $e) {
     throw new \InvalidArgumentException("Custom routes hasn't been configured because: ".$e->getMessage(), 1);

@@ -23,34 +23,50 @@ class Install extends Command
      */
     protected $description = 'this package init';
 
+    protected $filesystem;
+
     /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(Filesystem $filesystem)
     {
         parent::__construct();
+        $this->filesystem = $filesystem;
     }
 
+    protected function publishFiles()
+    {
+        if (isset(ServiceProvider::$publishes[ServiceProvider::class])) {
+            $this->info('Publish resource to local');
+            $this->call('vendor:publish', ['--provider' => ServiceProvider::class, '--tag' => ['config']]);
+        }
+    }
+
+    protected function publishRoutes()
+    {
+        $contents = $this->filesystem->get(base_path('routes/api.php'));
+        if (false === strpos($contents, 'Base::snackRoute()')) {
+            $this->info('Publish snack.php route to routes/api.php');
+
+            $pageApiVersion = \Zijinghua\Zvoyager\Base::getPageApiVersion();
+            $this->filesystem->append(
+                base_path('routes/api.php'),
+                "\n\nRoute::group(['middleware' => 'api', 'as' => 'zvoyager.', 'prefix' => '".
+                strtolower($pageApiVersion)."/zvoyager'], function() {\n".
+                "\tZijinghua\Zvoyager\Base::snackRoute();\n});\n"
+            );
+        }
+    }
     /**
      * Execute the console command.
      *
      * @return mixed
      */
-    public function handle(Filesystem $filesystem)
+    public function handle()
     {
-        $this->info('Publish zvoyager.php config to config/zvoyager.php');
-        $this->call('vendor:publish', ['--provider' => ServiceProvider::class, '--tag' => ['config']]);
-
-        if (false === strpos($contents, 'Base::snackRoute()')) {
-            $this->info('Publish snack.php route to routes/api.php');
-            $contents = $filesystem->get(base_path('routes/api.php'));
-            $filesystem->append(
-                base_path('routes/api.php'),
-                "\n\nRoute::group(['middleware' => 'api'], function() {\n".
-                "\tZijinghua\Zvoyager\Base::snackRoute();\n});\n"
-            );
-        }
+        $this->publishFiles();
+        $this->publishRoutes();
     }
 }

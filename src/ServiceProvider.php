@@ -28,6 +28,17 @@ class ServiceProvider extends Support\ServiceProvider
         return realpath(__DIR__.'/../publishable');
     }
 
+    protected function existSkip(array $paths)
+    {
+        foreach ($paths as $source=>$targe) {
+            if (file_exists($targe)) {
+                unset($paths[$source]);
+            }
+        }
+
+        return $paths;
+    }
+
     protected function registerPublishableResources()
     {
         $publishable = [
@@ -37,7 +48,10 @@ class ServiceProvider extends Support\ServiceProvider
         ];
 
         foreach ($publishable as $group => $paths) {
-            $this->publishes($paths, $group);
+            $paths = $this->existSkip($paths);
+            if (!empty($paths)) {
+                $this->publishes($this->existSkip($paths), $group);
+            }
         }
     }
 
