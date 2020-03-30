@@ -5,6 +5,7 @@ namespace Zijinghua\Zvoyager\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Zijinghua\Zvoyager\Base;
+use Zijinghua\Zvoyager\ServiceProvider;
 
 class Install extends Command
 {
@@ -13,7 +14,7 @@ class Install extends Command
      *
      * @var string
      */
-    protected $signature = 'fm:install';
+    protected $signature = 'zvoyager:install';
 
     /**
      * The console command description.
@@ -39,9 +40,12 @@ class Install extends Command
      */
     public function handle(Filesystem $filesystem)
     {
-        $this->info('Publish snack.php route to routes/api.php');
-        $contents = $filesystem->get(base_path('routes/api.php'));
+        $this->info('Publish zvoyager.php config to config/zvoyager.php');
+        $this->call('vendor:publish', ['--provider' => ServiceProvider::class, '--tag' => ['config']]);
+
         if (false === strpos($contents, 'Base::snackRoute()')) {
+            $this->info('Publish snack.php route to routes/api.php');
+            $contents = $filesystem->get(base_path('routes/api.php'));
             $filesystem->append(
                 base_path('routes/api.php'),
                 "\n\nRoute::group(['middleware' => 'api'], function() {\n".
