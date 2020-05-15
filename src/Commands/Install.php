@@ -42,10 +42,10 @@ class Install extends Command
     {
         $this->info('Publish zvoyager.php config to config/zvoyager.php');
         $this->call('vendor:publish', ['--provider' => ServiceProvider::class, '--tag' => ['config']]);
-
+        $contents = $filesystem->get(base_path('routes/api.php'));
         if (false === strpos($contents, 'Base::snackRoute()')) {
             $this->info('Publish snack.php route to routes/api.php');
-            $contents = $filesystem->get(base_path('routes/api.php'));
+
             $filesystem->append(
                 base_path('routes/api.php'),
                 "\n\nRoute::group(['middleware' => 'api'], function() {\n".
