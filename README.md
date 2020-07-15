@@ -71,21 +71,6 @@
     }
 ~~~
 
-5.修改App\Exceptions下的Handler
->修改rander方法
-~~~php
-    public function render($request, Exception $exception)
-    {
-        $code = $exception->getCode();
-        $response =  [
-            'data' => [],
-            'status' => false,
-            'message' => $exception->getMessage()
-        ];
-        return response()->json($response, $code);
-    }
-~~~
-
 
 
 

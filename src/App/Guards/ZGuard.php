@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\JWT;
 use Tymon\JWTAuth\JWTGuard;
 use Zijinghua\Zvoyager\App\Providers\ClientRestfulUserProvider;
+use App\Models\User;
 
 class ZGuard extends JWTGuard
 {
@@ -40,7 +41,13 @@ class ZGuard extends JWTGuard
      */
     public function attempt(array $credentials = [], $login = true)
     {
-        $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
+        $result = $this->provider->retrieveByCredentials($credentials);
+        if (!$result instanceof User && is_array($result)) {
+            $result['message'] = config('zvoyager.auth.message.user_has_not_exists');
+            unset($result['links'], $result['meta'], $result['code']);
+            return $result;
+        }
+        $this->lastAttempted = $user = $result;
 
         if ($this->hasValidCredentials($user, $credentials)) {
             return $login ? $this->login($user) : true;

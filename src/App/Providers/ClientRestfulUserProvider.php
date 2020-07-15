@@ -105,8 +105,7 @@ class ClientRestfulUserProvider implements UserProvider
         $code = $response->getStatusCode();
 
         if ($code != 200) {
-            $message = config('zvoyager.auth.message.user_has_not_exists');
-            throw new Exception($message, $code);
+            return $result;
         }
         $user = app(User::class)->firstOrNew($result['data'][0]);
         return $user;
@@ -144,7 +143,8 @@ class ClientRestfulUserProvider implements UserProvider
         $result = json_decode($response->getBody()->__toString(),true);
         $code = $response->getStatusCode();
         if ($code != 200) {
-            throw new Exception($result['message'], $code);
+            unset($result['code']);
+            return $result;
         }
         return $result;
     }
