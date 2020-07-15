@@ -1,9 +1,11 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
-use Illuminate\Support;
+use Zijinghua\Zvoyager\App\Guards\ZGuard;
+use Zijinghua\Zvoyager\App\Providers\ClientRestfulUserProvider;
+use Illuminate\Support\ServiceProvider;
 
-class ServiceProvider extends Support\ServiceProvider
+class ZServiceProvider extends ServiceProvider
 {
     public function register()
     {
@@ -16,6 +18,12 @@ class ServiceProvider extends Support\ServiceProvider
     public function boot()
     {
         $this->mergeConfig();
+        \Auth::extend('zguard', function(){
+            return app(ZGuard::class);   //返回自定义 guard 实例
+        });
+        \Auth::provider('zuserprovider', function () {
+            return new ClientRestfulUserProvider();
+        });
     }
 
     public function registerConsoleCommands()
