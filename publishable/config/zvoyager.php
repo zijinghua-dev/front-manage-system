@@ -3,8 +3,9 @@ return [
     'usercenter' => [
         'host' => env('USERCENTER_HOST'),
         'api' => [
-            'login_uri' => 'http://uc.test/api/v1/auth/login',
-            'search_uri' => 'http://uc.test/api/v1/user',
+            'login_uri' => '/api/v1/auth/login',
+            'search_uri' => '/api/v1/user/search',
+            'detail_uri' => '/api/v1/user',
         ],
         'fields' => ['username', 'email', 'mobile', 'wechat_id', 'account']
     ],

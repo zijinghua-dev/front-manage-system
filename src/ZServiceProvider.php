@@ -1,9 +1,14 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
+use Zijinghua\Zvoyager\App\Constracts\Repositories\UserInterface as UserRepositoryInterface;
+use Zijinghua\Zvoyager\App\Constracts\Services\UserInterface as UserServiceInterface;
 use Zijinghua\Zvoyager\App\Guards\ZGuard;
 use Zijinghua\Zvoyager\App\Providers\ClientRestfulUserProvider;
 use Illuminate\Support\ServiceProvider;
+use Zijinghua\Zvoyager\App\Providers\RegisterServiceProvider;
+use Zijinghua\Zvoyager\App\Repositories\UserRepository;
+use Zijinghua\Zvoyager\App\Services\UserService;
 
 class ZServiceProvider extends ServiceProvider
 {
@@ -13,6 +18,8 @@ class ZServiceProvider extends ServiceProvider
             $this->registerConsoleCommands();
             $this->registerPublishableResources();
         }
+        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(UserServiceInterface::class, UserService::class);
     }
 
     public function boot()

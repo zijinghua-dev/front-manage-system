@@ -44,20 +44,20 @@ class ZGuard extends JWTGuard
         $result = $this->provider->retrieveByCredentials($credentials);
         if (!$result instanceof User && is_array($result)) {
             $result['message'] = config('zvoyager.auth.message.user_has_not_exists');
-            unset($result['links'], $result['meta'], $result['code']);
             return $result;
         }
         $this->lastAttempted = $user = $result;
 
-        if ($this->hasValidCredentials($user, $credentials)) {
+        $validateResult = $this->hasValidCredentials($user, $credentials);
+        if (isset($validateResult['status']) && $validateResult['status']) {
             return $login ? $this->login($user) : true;
+        } else {
+            return $validateResult;
         }
-
-        return false;
     }
 
     /**
-     * Determine if the user matches the credentials.
+     * Return Validate Result
      *
      * @param  mixed  $user
      * @param  array  $credentials
@@ -66,6 +66,7 @@ class ZGuard extends JWTGuard
      */
     protected function hasValidCredentials($user, $credentials)
     {
-        return $user !== null && $this->provider->validateCredentials($user, $credentials);
+        $result = $this->provider->validateCredentials($user, $credentials);
+        return $result;
     }
 }
