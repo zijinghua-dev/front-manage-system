@@ -1,6 +1,6 @@
 <?php
 
-namespace Zijinghua\Zvoyager\App\Providers;
+namespace Zijinghua\Zvoyager\Providers;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\EloquentUserProvider;
@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 use App\Models\User;
+use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zvoyager\App\Constracts\Services\UserInterface;
 
 class ClientRestfulUserProvider implements UserProvider

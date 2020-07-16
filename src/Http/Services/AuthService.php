@@ -42,7 +42,7 @@ class AuthService extends BaseService implements AuthServiceInterface
 
         $credentials = $this->getCredentials($data);
 
-//        $guard=Auth::guard('api');
+        $guard=Auth::guard('api');
         if (Auth::guard('api')->attempt($credentials)) {
             $code='loginsuccess';
             return ;

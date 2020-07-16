@@ -19,6 +19,7 @@ class ZServiceProvider extends ServiceProvider
             $this->registerConsoleCommands();
             $this->registerPublishableResources();
         }
+        $this->registerService();
     }
 
     protected function registerService(){
