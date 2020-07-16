@@ -1,11 +1,11 @@
 <?php
 
-namespace Zijinghua\Zvoyager\App\Guards;
+namespace Zijinghua\Zvoyager\Guards;
 
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\JWT;
 use Tymon\JWTAuth\JWTGuard;
-use Zijinghua\Zvoyager\App\Providers\ClientRestfulUserProvider;
+use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
 use App\Models\User;
 
 class ZGuard extends JWTGuard

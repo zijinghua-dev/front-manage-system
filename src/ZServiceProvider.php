@@ -1,8 +1,14 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
-use Zijinghua\Zvoyager\App\Guards\ZGuard;
-use Zijinghua\Zvoyager\App\Providers\ClientRestfulUserProvider;
+use Zijinghua\Zvoyager\Http\Contracts\UserRepositoryInterface;
+use Zijinghua\Zvoyager\Http\Models\RestfulUser;
+use Zijinghua\Zvoyager\Http\Repositories\RestfulUserRepository;
+use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
+use Zijinghua\Zvoyager\Http\Services\AuthService;
+use Illuminate\Foundation\AliasLoader;
+use Zijinghua\Zvoyager\Guards\ZGuard;
+use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
 use Illuminate\Support\ServiceProvider;
 
 class ZServiceProvider extends ServiceProvider
@@ -13,8 +19,27 @@ class ZServiceProvider extends ServiceProvider
             $this->registerConsoleCommands();
             $this->registerPublishableResources();
         }
+        $this->registerService();
     }
 
+    protected function registerService(){
+        $loader = AliasLoader::getInstance();
+        $loader->alias('authService', AuthServiceInterface::class);
+        $this->app->singleton('authService', function () {
+            return new AuthService();
+        });
+
+        $loader->alias('userModel', UserModelInterface::class);
+        $this->app->singleton('userModel', function () {
+            return new RestfulUser();
+        });
+        $loader->alias('userResource', UserResource::class);
+
+        $loader->alias('userRepository', UserRepositoryInterface::class);
+        $this->app->singleton('userRepository', function () {
+            return new RestfulUserRepository();
+        });
+    }
     public function boot()
     {
         $this->mergeConfig();

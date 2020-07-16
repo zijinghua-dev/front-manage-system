@@ -1,6 +1,6 @@
 {
     "name": "zijinghua/zvoyager",
-    "description": "common UserProvider",
+    "description": "the consumer system of UserCenter Service",
     "type": "library",
     "require": {
         "illuminate/support": "~5.5|~6.0"

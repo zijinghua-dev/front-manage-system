@@ -1,6 +1,6 @@
 <?php
 
-namespace Zijinghua\Zvoyager\App\Providers;
+namespace Zijinghua\Zvoyager\Providers;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\EloquentUserProvider;
@@ -13,8 +13,10 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 use App\Models\User;
+use Zijinghua\Zbasement\Facades\Zsystem;
+use Zijinghua\Zbasement\Http\Services\BaseService;
 
-class ClientRestfulUserProvider implements UserProvider
+class ClientRestfulUserProvider extends BaseService implements UserProvider
 {
     protected $client;
 
@@ -87,28 +89,35 @@ class ClientRestfulUserProvider implements UserProvider
         // First we will add each credential element to the query as a where clause.
         // Then we can execute the query and, if we found a user, return it in a
         // Eloquent User "model" that will be utilized by the Guard instances.
-        $this->createRestfulClient();
-
-        $query=[];
-        foreach ($credentials as $key => $value) {
-            if (Str::contains($key, 'password')) {
-                continue;
-            }
-            $query[$key]=$value;
+        $userService=Zsystem::service('user');
+        $response=$userService->fetch($credentials);
+        if ($response->status){
+            $user=$response->data;
+            return $user;
         }
-        $searchUri = config('zvoyager.usercenter.host') . config('zvoyager.usercenter.api.search_uri');
 
-        $response = $this->client->request('get', $searchUri, [
-            'query' => $query
-        ]);
-        $result = json_decode($response->getBody()->__toString(),true);
-        $code = $response->getStatusCode();
-
-        if ($code != 200) {
-            return $result;
-        }
-        $user = app(User::class)->firstOrNew($result['data'][0]);
-        return $user;
+//        $this->createRestfulClient();
+//
+//        $query=[];
+//        foreach ($credentials as $key => $value) {
+//            if (Str::contains($key, 'password')) {
+//                continue;
+//            }
+//            $query[$key]=$value;
+//        }
+//        $searchUri = config('zvoyager.usercenter.host') . config('zvoyager.usercenter.api.search_uri');
+//
+//        $response = $this->client->request('get', $searchUri, [
+//            'query' => $query
+//        ]);
+//        $result = json_decode($response->getBody()->__toString(),true);
+//        $code = $response->getStatusCode();
+//
+//        if ($code != 200) {
+//            return $result;
+//        }
+//        $user = app(User::class)->firstOrNew($result['data'][0]);
+//        return $user;
     }
 
     /**
@@ -133,19 +142,8 @@ class ClientRestfulUserProvider implements UserProvider
      */
     public function validateCredentials( $user, array $credentials)
     {
-        $this->createRestfulClient();
-        $loginUri = config('zvoyager.usercenter.host') . config('zvoyager.usercenter.api.login_uri');
-        $requestData = [
-            'form_params' => $credentials
-        ];
+        $plain = $credentials['password'];
 
-        $response = $this->client->request('post', $loginUri, $requestData);
-        $result = json_decode($response->getBody()->__toString(),true);
-        $code = $response->getStatusCode();
-        if ($code != 200) {
-            unset($result['code']);
-            return $result;
-        }
-        return $result;
+        return $this->hasher->check($plain, $user->password());
     }
 }
