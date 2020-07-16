@@ -1,6 +1,6 @@
 <?php
 
-namespace Zijinghua\Zvoyager\Providers;
+namespace Zijinghua\Zvoyager\App\Providers;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\EloquentUserProvider;
@@ -9,14 +9,13 @@ use Illuminate\Contracts\Auth\UserProvider;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use Exception;
-use Illuminate\Contracts\Support\Arrayable;
+
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 use App\Models\User;
-use Zijinghua\Zbasement\Facades\Zsystem;
-use Zijinghua\Zbasement\Http\Services\BaseService;
+use Zijinghua\Zvoyager\App\Constracts\Services\UserInterface;
 
-class ClientRestfulUserProvider extends BaseService implements UserProvider
+class ClientRestfulUserProvider implements UserProvider
 {
     protected $client;
 
@@ -33,17 +32,7 @@ class ClientRestfulUserProvider extends BaseService implements UserProvider
      */
     public function retrieveById($identifier)
     {
-        //guzzle客户端
-        $this->createRestfulClient();
-        $response = $this->client->get('/api/user', [
-            'query' => [		//get查询字符串参数组
-                'id' => $identifier,
-            ],
-        ]);
-
-        $json=json_decode($response->getBody());
-        //判断错误、异常
-        $user=new User(json_decode(json_encode($json->user),true));
+        $user = $this->userService->userinfo($identifier);
         return $user;
     }
 

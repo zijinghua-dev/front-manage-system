@@ -1,5 +1,5 @@
 {
-    "name": "zijinghua/zvoyager",
+    "name": "zijinghua-dev/zvoyager",
     "description": "the consumer system of UserCenter Service",
     "type": "library",
     "require": {
