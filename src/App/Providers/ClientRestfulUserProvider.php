@@ -20,7 +20,7 @@ class ClientRestfulUserProvider implements UserProvider
     protected $userService;
     public function __construct(UserInterface $userService)
     {
-        $this->userService = $userService;
+        return $this->userService = $userService;
     }
 
     /**
