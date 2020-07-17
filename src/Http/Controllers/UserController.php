@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Zijinghua\Zvoyager\Http\Controllers;
 
 use App\Http\Requests\UpdatePasswordRequest;
 use Zijinghua\Zbasement\Http\Controllers\BaseController as BaseController;

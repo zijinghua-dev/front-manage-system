@@ -36,16 +36,20 @@ class AuthService extends BaseService implements AuthServiceInterface
         $this->setUsername($data);
 
         if ($this->hasTooManyLoginAttempts($request)) {
-            $code='hasTooManyLoginAttempts';
-            return ;
+            $code='zbasement.code.'.$this->getSlug().'.login.toomanyattempts';
+//            $resource=$this->getResource($this->getSlug(),'login');
+            $messageResponse=$this->messageResponse($code);
+            return $messageResponse;
         }
 
         $credentials = $this->getCredentials($data);
-
-//        $guard=Auth::guard('api');
-        if (Auth::guard('api')->attempt($credentials)) {
-            $code='loginsuccess';
-            return ;
+        $loginResult=Auth::guard('api')->attempt($credentials);
+        if ($loginResult) {
+            $code='zbasement.code.'.$this->getSlug().'.login.success';
+            //由于没有单独为authlogin准备resource，而是共用了user的resource
+            $resource=$this->getResource('user','login');
+            $messageResponse=$this->messageResponse($code,$loginResult,$resource);
+            return $messageResponse;
         }
 
 // If the login attempt was unsuccessful we will increment the number of attempts
@@ -53,8 +57,9 @@ class AuthService extends BaseService implements AuthServiceInterface
 // user surpasses their maximum number of attempts they will get locked out.
         $this->incrementLoginAttempts($request);
 
-        $code='loginfailed';
-        return ;
+        $code='zbasement.code.'.$this->getSlug().'.login.failed';
+        $messageResponse=$this->messageResponse($code);
+        return $messageResponse;
     }
 
     protected function getCredentials($credentials): array

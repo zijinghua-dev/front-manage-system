@@ -42,18 +42,27 @@ class ZGuard extends JWTGuard
     public function attempt(array $credentials = [], $login = true)
     {
         $result = $this->provider->retrieveByCredentials($credentials);
-        if (!$result instanceof User && is_array($result)) {
+        if (!isset($result)) {
             $result['message'] = config('zvoyager.auth.message.user_has_not_exists');
             return $result;
         }
         $this->lastAttempted = $user = $result;
 
-        $validateResult = $this->hasValidCredentials($user, $credentials);
-        if (isset($validateResult['status']) && $validateResult['status']) {
-            return $login ? $this->login($user) : true;
-        } else {
-            return $validateResult;
+        if ($this->hasValidCredentials($user, $credentials)) {
+            if($login){
+                $this->login($user);
+            }
+            return $this->lastAttempted;
         }
+
+        return false;
+//
+//        $validateResult = $this->hasValidCredentials($user, $credentials);
+//        if (isset($validateResult['status']) && $validateResult['status']) {
+//            return $login ? $this->login($user) : true;
+//        } else {
+//            return $validateResult;
+//        }
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Resources;
+namespace Zijinghua\Zvoyager\Http\Resources;
 
 
 use Illuminate\Http\Resources\Json\JsonResource;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Zijinghua\Zvoyager\App\Providers;
+namespace Zijinghua\Zvoyager\Providers;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\EloquentUserProvider;
@@ -10,9 +10,11 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use Exception;
 
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 use App\Models\User;
+use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zvoyager\App\Constracts\Services\UserInterface;
 
 class ClientRestfulUserProvider implements UserProvider
@@ -80,7 +82,7 @@ class ClientRestfulUserProvider implements UserProvider
         // Eloquent User "model" that will be utilized by the Guard instances.
         $userService=Zsystem::service('user');
         $response=$userService->fetch($credentials);
-        if ($response->status){
+        if ($response->code->status){
             $user=$response->data;
             return $user;
         }
@@ -133,6 +135,6 @@ class ClientRestfulUserProvider implements UserProvider
     {
         $plain = $credentials['password'];
 
-        return $this->hasher->check($plain, $user->password());
+        return Hash::check($plain, $user->password);
     }
 }

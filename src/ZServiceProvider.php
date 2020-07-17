@@ -1,13 +1,17 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
-use Zijinghua\Zvoyager\Http\Contracts\UserRepositoryInterface;
-use Zijinghua\Zvoyager\Http\Models\RestfulUser;
-use Zijinghua\Zvoyager\Http\Repositories\RestfulUserRepository;
+use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
+use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
+use Zijinghua\Zbasement\Http\Contracts\UserRepositoryInterface;
+use Zijinghua\Zbasement\Http\Models\RestfulUser;
+use Zijinghua\Zbasement\Http\Repositories\RestfulUserRepository;
+use Zijinghua\Zvoyager\Http\Contracts\UserServiceInterface;
 use Zijinghua\Zvoyager\Http\Services\AuthService;
 use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
+use Zijinghua\Zvoyager\Http\Services\UserService;
 use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
 use Illuminate\Support\ServiceProvider;
 
@@ -19,25 +23,34 @@ class ZServiceProvider extends ServiceProvider
             $this->registerConsoleCommands();
             $this->registerPublishableResources();
         }
+        $this->registerService();
     }
 
     protected function registerService(){
         $loader = AliasLoader::getInstance();
+
+        $loader->alias('userResource', UserResource::class);
+
         $loader->alias('authService', AuthServiceInterface::class);
         $this->app->singleton('authService', function () {
             return new AuthService();
+        });
+        $loader->alias('userService', UserServiceInterface::class);
+        $this->app->singleton('userService', function () {
+            return new UserService();
         });
 
         $loader->alias('userModel', UserModelInterface::class);
         $this->app->singleton('userModel', function () {
             return new RestfulUser();
         });
-        $loader->alias('userResource', UserResource::class);
+
 
         $loader->alias('userRepository', UserRepositoryInterface::class);
         $this->app->singleton('userRepository', function () {
             return new RestfulUserRepository();
         });
+
     }
     public function boot()
     {
