@@ -43,13 +43,11 @@ class AuthService extends BaseService implements AuthServiceInterface
         }
 
         $credentials = $this->getCredentials($data);
-        $loginResult=Auth::guard('api')->attempt($credentials);
-        if ($loginResult) {
-            $code='zbasement.code.'.$this->getSlug().'.login.success';
-            //由于没有单独为authlogin准备resource，而是共用了user的resource
-            $resource=$this->getResource('user','login');
-            $messageResponse=$this->messageResponse($code,$loginResult,$resource);
-            return $messageResponse;
+
+//        $guard=Auth::guard('api');
+        if (Auth::guard('api')->attempt($credentials)) {
+            $code='loginsuccess';
+            return ;
         }
 
 // If the login attempt was unsuccessful we will increment the number of attempts
