@@ -10,6 +10,8 @@ use Zijinghua\Zbasement\Http\Controllers\BaseController as BaseController;
 class AuthController extends BaseController
 {
 //    use AuthenticatesUsers;
+//登录时可以是username，mobile，email和account，
+//wechatID登录从另一个接口进入，直接调用authService，把三方ID写到request中
     public function login(LoginRequest $request){
         event(new InterfaceBeforeEvent($request));
         //从request里获取参数（slug，查询参数）----记得在service里面过滤参数，去掉不用的参数

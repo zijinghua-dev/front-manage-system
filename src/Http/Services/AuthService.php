@@ -32,6 +32,7 @@ class AuthService extends BaseService implements AuthServiceInterface
         }
     }
     public function login($request){
+        //如果是第三方登录，不要验证
         $data=$request->all();
         $this->setUsername($data);
 
