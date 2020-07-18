@@ -2,6 +2,7 @@
 namespace Zijinghua\Zvoyager;
 
 use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
+use Zijinghua\Zbasement\Providers\BaseServiceProvider;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 use Zijinghua\Zbasement\Http\Contracts\UserRepositoryInterface;
@@ -13,9 +14,8 @@ use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
 use Zijinghua\Zvoyager\Http\Services\UserService;
 use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
-use Illuminate\Support\ServiceProvider;
 
-class ZServiceProvider extends ServiceProvider
+class ZServiceProvider extends BaseServiceProvider
 {
     public function register()
     {
@@ -54,7 +54,7 @@ class ZServiceProvider extends ServiceProvider
     }
     public function boot()
     {
-        $this->mergeConfig();
+        $this->registerConfig();
         \Auth::extend('zguard', function(){
             return app(ZGuard::class);   //返回自定义 guard 实例
         });
@@ -86,8 +86,9 @@ class ZServiceProvider extends ServiceProvider
         }
     }
 
-    protected function mergeConfig()
+    protected function registerConfig()
     {
         $this->mergeConfigFrom($this->getPublishablePath()."/config/zvoyager.php", 'zvoyager');
+        //storerequest和loginrequest
     }
 }
