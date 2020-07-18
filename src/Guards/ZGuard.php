@@ -31,6 +31,21 @@ class ZGuard extends JWTGuard
         $this->provider = $provider;
         $this->request = $request;
     }
+
+    public function attemptExternal(array $credentials = [], $login = true)
+    {
+        $result = $this->provider->retrieveByCredentials($credentials);
+        if (!isset($result)) {
+            $result['message'] = config('zvoyager.auth.message.user_has_not_exists');
+            return $result;
+        }
+        $this->lastAttempted = $user = $result;
+
+            if ($login) {
+                $this->login($user);
+            }
+            return $this->lastAttempted;
+    }
     /**
      * Attempt to authenticate the user using the given credentials and return the token.
      *

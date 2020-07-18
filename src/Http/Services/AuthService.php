@@ -45,10 +45,15 @@ class AuthService extends BaseService implements AuthServiceInterface
 
         $credentials = $this->getCredentials($data);
 
-        $guard=Auth::guard('api');
-        if (Auth::guard('api')->attempt($credentials)) {
-            $code='loginsuccess';
-            return ;
+        if(in_array($this->username(),getConfigValue('zbasement.fields.auth.external'))){
+            $loginResult=Auth::guard('api')->attemptExternal($credentials);
+        }else{
+            $loginResult=Auth::guard('api')->attempt($credentials);
+        }
+        if (isset($loginResult)) {
+            $code='zbasement.code.'.$this->getSlug().'.login.success';
+            $messageResponse=$this->messageResponse($code,$loginResult);
+            return $messageResponse;
         }
 
 // If the login attempt was unsuccessful we will increment the number of attempts
@@ -56,7 +61,7 @@ class AuthService extends BaseService implements AuthServiceInterface
 // user surpasses their maximum number of attempts they will get locked out.
         $this->incrementLoginAttempts($request);
 
-        $code='zbasement.code.'.$this->getSlug().'.login.failed';
+        $code='zbasement.code.'.$this->getSlug().'.login.error';
         $messageResponse=$this->messageResponse($code);
         return $messageResponse;
     }
@@ -66,8 +71,8 @@ class AuthService extends BaseService implements AuthServiceInterface
         $filtedCredentials=[];
         foreach ($credentials as $field => $val) {
             if ($field == 'account') {
-                $filtedCredentials=array_merge( $filtedCredentials, $this->getAccountField($val));
-                $filtedCredentials['password']=$credentials['password'];
+                $this->username = $field;
+                $filtedCredentials= Arr::only($credentials, [$field, 'account']);
                 break;
             }
 
