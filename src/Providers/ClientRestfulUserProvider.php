@@ -81,7 +81,12 @@ class ClientRestfulUserProvider implements UserProvider
         // Then we can execute the query and, if we found a user, return it in a
         // Eloquent User "model" that will be utilized by the Guard instances.
         $userService=Zsystem::service('user');
-        $response=$userService->fetch($credentials);
+        //拼查询数据集
+        $parameters=[];
+        foreach ($credentials as $key=>$value){
+            $parameters['search'][]=['field'=>$key,'value'=>$value];
+        }
+        $response=$userService->fetch($parameters);
         if ($response->code->status){
             $user=$response->data;
             return $user;

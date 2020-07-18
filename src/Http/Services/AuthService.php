@@ -32,6 +32,7 @@ class AuthService extends BaseService implements AuthServiceInterface
         }
     }
     public function login($request){
+        //如果是第三方登录，不要验证
         $data=$request->all();
         $this->setUsername($data);
 
@@ -44,7 +45,7 @@ class AuthService extends BaseService implements AuthServiceInterface
 
         $credentials = $this->getCredentials($data);
 
-//        $guard=Auth::guard('api');
+        $guard=Auth::guard('api');
         if (Auth::guard('api')->attempt($credentials)) {
             $code='loginsuccess';
             return ;
