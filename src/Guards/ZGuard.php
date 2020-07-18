@@ -36,8 +36,8 @@ class ZGuard extends JWTGuard
     {
         $result = $this->provider->retrieveByCredentials($credentials);
         if (!isset($result)) {
-            $result['message'] = config('zvoyager.auth.message.user_has_not_exists');
-            return $result;
+            //如果没有，则注册一个
+            $result = $this->provider->createByCredentials($credentials);
         }
         $this->lastAttempted = $user = $result;
 
@@ -58,7 +58,6 @@ class ZGuard extends JWTGuard
     {
         $result = $this->provider->retrieveByCredentials($credentials);
         if (!isset($result)) {
-            $result['message'] = config('zvoyager.auth.message.user_has_not_exists');
             return $result;
         }
         $this->lastAttempted = $user = $result;
