@@ -52,7 +52,8 @@ class AuthService extends BaseService implements AuthServiceInterface
         }
         if (isset($loginResult)) {
             $code='zbasement.code.'.$this->getSlug().'.login.success';
-            $messageResponse=$this->messageResponse($code,$loginResult);
+            $resource=$this->getResource('user');
+            $messageResponse=$this->messageResponse($code,$loginResult,$resource);
             return $messageResponse;
         }
 
