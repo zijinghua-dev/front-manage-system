@@ -12,6 +12,11 @@ use Zijinghua\Zbasement\Http\Services\BaseService;
 
 class UserService extends BaseService implements UserServiceInterface
 {
+    //保存用户数据时，如果是带密码的，要先加密，然后再传给用户中心
+    public function store($data){
+        //所有第三方账号，如wechat_id，都不能直接创建用户，都是通过登录转过来注册的
+        //所以，第三方账号，如wechat_id，都已经解密
+    }
     //只返回第一个用户，并且返回这个用户的全部数据
 //    public function fetch($data){
 //        $repository=Zsystem::repository($this->getSlug());

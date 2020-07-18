@@ -4,6 +4,8 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
@@ -85,11 +87,24 @@ class AuthService extends BaseService implements AuthServiceInterface
 
             if (in_array($field, getConfigValue('zbasement.fields.auth.external'))) {
                 $this->username = $field;
-                $filtedCredentials= Arr::only($credentials, [$field]);
+                $decryptedId=$this->decrypt($credentials[$field]);
+                $filtedCredentials= [$field=>$decryptedId];
                 break;
             }
         }
 
         return $filtedCredentials;
+    }
+
+    //解密结果有两个：null或值，null代表不正确
+    protected function decrypt($encyptedId)
+    {
+        try {
+            $decrypted = decrypt($encyptedId);
+            return $decrypted;
+        } catch (DecryptException $e) {
+            //这里应该再包装异常，放进response格式
+        }
+
     }
 }
