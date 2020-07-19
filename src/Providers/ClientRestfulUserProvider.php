@@ -122,7 +122,7 @@ class ClientRestfulUserProvider implements UserProvider
 //            }
 //            $query[$key]=$value;
 //        }
-//        $searchUri = config('zvoyager.usercenter.host') . config('zvoyager.usercenter.api.search_uri');
+//        $searchUri = configs('zvoyager.usercenter.host') . configs('zvoyager.usercenter.api.search_uri');
 //
 //        $response = $this->client->request('get', $searchUri, [
 //            'query' => $query

@@ -11,12 +11,14 @@ use Illuminate\Support\Facades\Auth;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Zijinghua\Zbasement\Http\Services\BaseService;
+use Zijinghua\Zvoyager\Traits\Credential;
 
 
 class AuthService extends BaseService implements AuthServiceInterface
 {
-    use AuthenticatesUsers;
-    private $username;
+    use AuthenticatesUsers,Credential;
+
+    protected $username;
     public function username()
     {
         return $this->username;
@@ -33,6 +35,7 @@ class AuthService extends BaseService implements AuthServiceInterface
             }
         }
     }
+
     public function login($request){
         //如果是第三方登录，不要验证
         $data=$request->all();
@@ -46,7 +49,10 @@ class AuthService extends BaseService implements AuthServiceInterface
         }
 
         $credentials = $this->getCredentials($data);
-
+        if(!isset($credentials)){
+            //这里要抛出异常
+            return;
+        }
         if(in_array($this->username(),getConfigValue('zbasement.fields.auth.external'))){
             $loginResult=Auth::guard('api')->attemptExternal($credentials);
         }else{
@@ -69,42 +75,7 @@ class AuthService extends BaseService implements AuthServiceInterface
         return $messageResponse;
     }
 
-    protected function getCredentials($credentials): array
-    {
-        $filtedCredentials=[];
-        foreach ($credentials as $field => $val) {
-            if ($field == 'account') {
-                $this->username = $field;
-                $filtedCredentials= Arr::only($credentials, [$field, 'account']);
-                break;
-            }
 
-            if (in_array($field, getConfigValue('zbasement.fields.auth.internal'))) {
-                $this->username = $field;
-                $filtedCredentials= Arr::only($credentials, [$field, 'password']);
-                break;
-            }
 
-            if (in_array($field, getConfigValue('zbasement.fields.auth.external'))) {
-                $this->username = $field;
-                $decryptedId=$this->decrypt($credentials[$field]);
-                $filtedCredentials= [$field=>$decryptedId];
-                break;
-            }
-        }
 
-        return $filtedCredentials;
-    }
-
-    //解密结果有两个：null或值，null代表不正确
-    protected function decrypt($encyptedId)
-    {
-        try {
-            $decrypted = decrypt($encyptedId);
-            return $decrypted;
-        } catch (DecryptException $e) {
-            //这里应该再包装异常，放进response格式
-        }
-
-    }
 }

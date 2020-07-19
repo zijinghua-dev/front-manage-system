@@ -1,8 +1,12 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Routing\Router;
+use TCG\Voyager\Http\Middleware\VoyagerAdminMiddleware;
 use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
 use Zijinghua\Zbasement\Providers\BaseServiceProvider;
+use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 use Zijinghua\Zbasement\Http\Contracts\UserRepositoryInterface;
@@ -14,6 +18,7 @@ use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
 use Zijinghua\Zvoyager\Http\Services\UserService;
 use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
+use Zijinghua\Zvoyager\Providers\RouteServiceProvider;
 
 class ZServiceProvider extends BaseServiceProvider
 {
@@ -24,8 +29,12 @@ class ZServiceProvider extends BaseServiceProvider
             $this->registerPublishableResources();
         }
         $this->registerService();
+        $this->registerProvider();
     }
 
+    private function registerProvider(){
+        $this->app->register(RouteServiceProvider::class);
+    }
     protected function registerService(){
         $loader = AliasLoader::getInstance();
 
@@ -52,7 +61,7 @@ class ZServiceProvider extends BaseServiceProvider
         });
 
     }
-    public function boot()
+    public function boot(Router $router, Dispatcher $event)
     {
         $this->registerConfig();
         \Auth::extend('zguard', function(){
@@ -61,6 +70,7 @@ class ZServiceProvider extends BaseServiceProvider
         \Auth::provider('zuserprovider', function () {
             return new ClientRestfulUserProvider();
         });
+        $router->aliasMiddleware('checkExternalNames', CheckExternalNames::class);
     }
 
     public function registerConsoleCommands()
@@ -77,7 +87,7 @@ class ZServiceProvider extends BaseServiceProvider
     {
         $publishable = [
             'config' => [
-                $this->getPublishablePath()."/config/zvoyager.php" => config_path('zvoyager.php'),
+                $this->getPublishablePath()."/configs/zvoyager.php" => config_path('zvoyager.php'),
             ],
         ];
 
@@ -88,7 +98,8 @@ class ZServiceProvider extends BaseServiceProvider
 
     protected function registerConfig()
     {
-//        $this->mergeConfigFrom($this->getPublishablePath()."/config/zvoyager.php", 'zvoyager');
-        //storerequest和loginrequest
+        $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code.php', 'zbasement.code');
+        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/fields.php', 'zbasement.fields');
+        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation.php', 'zbasement.validation');
     }
 }

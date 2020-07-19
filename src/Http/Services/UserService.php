@@ -9,13 +9,29 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zbasement\Http\Services\BaseService;
+use Zijinghua\Zvoyager\Traits\Credential;
 
 class UserService extends BaseService implements UserServiceInterface
 {
+    use Credential;
+    protected $username;
     //保存用户数据时，如果是带密码的，要先加密，然后再传给用户中心
     public function store($data){
         //所有第三方账号，如wechat_id，都不能直接创建用户，都是通过登录转过来注册的
         //所以，第三方账号，如wechat_id，都已经解密
+        //第三方账号注册时，不能注册密码
+
+        $credential=$this->getCredentials($data);
+        if(isset($credential['password'])){
+            $password['password']=Hash::make($credential['password']);
+            unset($credential['password']);
+        }
+        $name=$credential;
+        if(in_array(array_key_first($name),getConfigValue('zbasement.fields.auth.internal'))){
+            return parent::store([$name,$password]);
+        }elseif(in_array(array_key_first($name),getConfigValue('zbasement.fields.auth.external'))){
+            return parent::store($name);
+        }
     }
     //只返回第一个用户，并且返回这个用户的全部数据
 //    public function fetch($data){
@@ -64,31 +80,7 @@ class UserService extends BaseService implements UserServiceInterface
 //            }
 //        }
 //    }
-    protected function getCredentials($credentials): array
-    {
-        $filtedCredentials=[];
-        foreach ($credentials as $field => $val) {
-            if ($field == 'account') {
-                $filtedCredentials=array_merge( $filtedCredentials, $this->getAccountField($val));
-                $filtedCredentials['password']=$credentials['password'];
-               break;
-            }
 
-            if (in_array($field, getConfigValue('zbasement.fields.auth.internal'))) {
-                $this->username = $field;
-                $filtedCredentials= Arr::only($credentials, [$field, 'password']);
-                break;
-            }
-
-            if (in_array($field, getConfigValue('zbasement.fields.auth.external'))) {
-                $this->username = $field;
-                $filtedCredentials= Arr::only($credentials, [$field]);
-                break;
-            }
-        }
-
-        return $filtedCredentials;
-    }
 
     protected function getAccountField(string $value)
     {
