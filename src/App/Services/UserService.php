@@ -27,7 +27,14 @@ class UserService implements UserServiceInterface
                 Str::contains($this->firstCredentialKey($params), 'password'))) {
             return;
         }
-        return $this->user->search($params);
+        $query=[];
+        foreach ($params as $key => $value) {
+            if (Str::contains($key, 'password')) {
+                continue;
+            }
+            $query[$key]=$value;
+        }
+        return $this->user->search($query);
     }
     /**
      * 用户登录

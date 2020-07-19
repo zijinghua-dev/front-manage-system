@@ -5,16 +5,19 @@ namespace Zijinghua\Zvoyager\App\Repositories;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use Zijinghua\Zvoyager\App\Constracts\Repositories\UserInterface;
-use App\Models\User;
+use Zijinghua\Zvoyager\App\Models\User;
 
 class UserRepository implements UserInterface
 {
     protected $client;
 
-    public function __construct()
+    protected $user;
+
+    public function __construct(User $user)
     {
         // 让GuzzleHttp忽略错误
         $this->client = new Client(['http_errors' => false]);
+        $this->user = $user;
     }
 
     /**
@@ -24,25 +27,7 @@ class UserRepository implements UserInterface
      */
     public function search($params)
     {
-        $query=[];
-        foreach ($params as $key => $value) {
-            if (Str::contains($key, 'password')) {
-                continue;
-            }
-            $query[$key]=$value;
-        }
-        $searchUri = config('zvoyager.usercenter.host') . config('zvoyager.usercenter.api.search_uri');
-
-        $response = $this->client->request('get', $searchUri, [
-            'query' => $query
-        ]);
-        $result = json_decode($response->getBody()->__toString(),true);
-        $code = $response->getStatusCode();
-        if ($code != 200) {
-            return $result;
-        }
-        $user = app(User::class)->firstOrNew($result['data'][0]);
-        return $user;
+        return $this->user->search($params);
     }
 
     /**
