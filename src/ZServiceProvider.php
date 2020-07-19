@@ -88,7 +88,7 @@ class ZServiceProvider extends BaseServiceProvider
 
     protected function registerConfig()
     {
-        $this->mergeConfigFrom($this->getPublishablePath()."/config/zvoyager.php", 'zvoyager');
+//        $this->mergeConfigFrom($this->getPublishablePath()."/config/zvoyager.php", 'zvoyager');
         //storerequest和loginrequest
     }
 }

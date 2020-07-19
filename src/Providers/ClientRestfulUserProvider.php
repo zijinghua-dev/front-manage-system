@@ -19,13 +19,13 @@ use Zijinghua\Zvoyager\App\Constracts\Services\UserInterface;
 
 class ClientRestfulUserProvider implements UserProvider
 {
-    protected $client;
-
-    public function createRestfulClient(){
-        if(!$this->client){
-            $this->client = new Client(['http_errors' => false]);
-        }
-    }
+//    protected $client;
+//
+//    public function createRestfulClient(){
+//        if(!$this->client){
+//            $this->client = new Client(['http_errors' => false]);
+//        }
+//    }
     /**
      * Retrieve a user by their unique identifier.
      *
@@ -34,7 +34,7 @@ class ClientRestfulUserProvider implements UserProvider
      */
     public function retrieveById($identifier)
     {
-        $user = $this->userService->userinfo($identifier);
+        $user = $this->userService->show($identifier);
         return $user;
     }
 
