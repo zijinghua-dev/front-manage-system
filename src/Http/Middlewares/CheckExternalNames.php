@@ -4,8 +4,9 @@
 namespace Zijinghua\Zvoyager\Http\Middlewares;
 
 use Closure;
+use Exception;
 use Illuminate\Contracts\Encryption\DecryptException;
-use mysql_xdevapi\Exception;
+
 
 class CheckExternalNames
 {
@@ -22,6 +23,7 @@ class CheckExternalNames
         foreach ($data as $key=>$value){
             if(in_array($key,getConfigValue('zbasement.fields.auth.external'))){
                 try{
+//                    $key = encrypt( $data[$key] );
                     $data[$key] = decrypt( $data[$key] );
                 }
                 catch (DecryptException $e) {

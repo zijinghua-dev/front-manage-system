@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Requests;
+namespace Zijinghua\Zvoyager\Http\Requests;
 
 
 use Zijinghua\Zbasement\Http\Requests\BaseRequest;

@@ -241,16 +241,34 @@ return [
             ],
             'load'=>[
                 'rules'=>[
-                    'http_code' => 200,
-                    'code' => 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_LOAD_RULES',
-                    'status' => true,
-                    'message' => '更新密码操作所需验证规则加载成功!'
+                    'success'=>[
+                        'http_code' => 200,
+                        'code' => 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_LOAD_RULES_SUCCESS',
+                        'status' => true,
+                        'message' => '更新密码操作所需验证规则加载成功!'
+                    ],
+                    'failed'=>[
+                        'http_code' => 403,
+                        'code' => 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_LOAD_RULES_FAILED',
+                        'status' => false,
+                        'message' => '更新密码操作所需验证规则加载失败!'
+                    ],
+
                 ],
                 'messages'=>[
-                    'http_code' => 200,
-                    'code' => 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_LOAD_MESSAGES',
-                    'status' => true,
-                    'message' => '更新密码操作所需验证规则的提示信息加载成功!'
+                    'success'=>[
+                        'http_code' => 200,
+                        'code' => 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_LOAD_MESSAGES_SUCCESS',
+                        'status' => true,
+                        'message' => '更新密码操作所需验证规则的提示信息加载成功!'
+                    ],
+                    'failed'=>[
+                        'http_code' => 403,
+                        'code' => 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_LOAD_MESSAGES_FAILED',
+                        'status' => false,
+                        'message' => '更新密码操作所需验证规则的提示信息加载失败!'
+                    ],
+
                 ],
             ],
         ],

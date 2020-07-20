@@ -2,7 +2,7 @@
 
 namespace Zijinghua\Zvoyager\Http\Controllers;
 
-use App\Http\Requests\UpdatePasswordRequest;
+use Zijinghua\Zvoyager\Http\Requests\UpdatePasswordRequest;
 use Zijinghua\Zbasement\Http\Controllers\BaseController as BaseController;
 use Zijinghua\Zbasement\Http\Requests\IndexRequest;
 use Zijinghua\Zbasement\Http\Requests\ShowRequest;
