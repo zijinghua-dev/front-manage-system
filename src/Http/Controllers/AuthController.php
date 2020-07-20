@@ -21,6 +21,7 @@ class AuthController extends BaseController
         }
 
         $service=$this->service($this->slug);
+
         $message= $service->login($request);
         $response=$message->response();
         event(new InterfaceAfterEvent($request,$response));

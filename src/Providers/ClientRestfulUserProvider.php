@@ -100,12 +100,20 @@ class ClientRestfulUserProvider implements UserProvider
         // Eloquent User "model" that will be utilized by the Guard instances.
         $userService=Zsystem::service('user');
         //拼查询数据集
+        //account转为internal
         $parameters=[];
         foreach ($credentials as $key=>$value){
+            if(strtolower($key)=='account'){
+                foreach (getConfigValue('zbasement.fields.auth.internal') as $field){
+                    $parameters['search'][]=['field'=>$field,'value'=>$value,'filter'=>'=','algothm'=>'or'];
+                }
+                break;
+            }
             if($key!="password"){
                 $parameters['search'][]=['field'=>$key,'value'=>$value];
                 break;
             }
+
         }
         $response=$userService->fetch($parameters);
         if ($response->code->status){

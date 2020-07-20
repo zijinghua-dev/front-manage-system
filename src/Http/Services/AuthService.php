@@ -35,7 +35,6 @@ class AuthService extends BaseService implements AuthServiceInterface
             }
         }
     }
-
     public function login($request){
         //如果是第三方登录，不要验证
         $data=$request->all();
@@ -58,10 +57,10 @@ class AuthService extends BaseService implements AuthServiceInterface
         }else{
             $loginResult=Auth::guard('api')->attempt($credentials);
         }
-        if (isset($loginResult)) {
-            $code='zbasement.code.'.$this->getSlug().'.login.success';
+        if (isset($loginResult)&&(!empty($loginResult))) {
+//            $code='zbasement.code.'.$this->getSlug().'.login.success';
             $resource=$this->getResource('user');
-            $messageResponse=$this->messageResponse($code,$loginResult,$resource);
+            $messageResponse=$this->messageResponse($this->getSlug(),'login.success',$loginResult,$resource);
             return $messageResponse;
         }
 
@@ -70,8 +69,8 @@ class AuthService extends BaseService implements AuthServiceInterface
 // user surpasses their maximum number of attempts they will get locked out.
         $this->incrementLoginAttempts($request);
 
-        $code='zbasement.code.'.$this->getSlug().'.login.error';
-        $messageResponse=$this->messageResponse($code);
+//        $code='zbasement.code.'.$this->getSlug().'.login.error';
+        $messageResponse=$this->messageResponse($this->getSlug(),'login.failed');
         return $messageResponse;
     }
 

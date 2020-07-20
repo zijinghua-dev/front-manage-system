@@ -28,7 +28,7 @@ Trait Credential
         foreach ($credentials as $field => $val) {
             if ($field == 'account') {
                 $this->username = $field;
-                $filtedCredentials= Arr::only($credentials, [$field, 'account']);
+                $filtedCredentials= Arr::only($credentials, [$field, 'password']);
                 break;
             }
 

@@ -28,7 +28,8 @@ class UserService extends BaseService implements UserServiceInterface
         }
         $name=$credential;
         if(in_array(array_key_first($name),getConfigValue('zbasement.fields.auth.internal'))){
-            return parent::store([$name,$password]);
+            $parameters=array_merge($name,$password);
+            return parent::store($parameters);
         }elseif(in_array(array_key_first($name),getConfigValue('zbasement.fields.auth.external'))){
             return parent::store($name);
         }
