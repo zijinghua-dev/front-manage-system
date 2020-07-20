@@ -96,17 +96,16 @@ class UserService extends BaseService implements UserServiceInterface
     public function updatePassword($data){
         $repository=$this->repository();
         //获取用户
-        $user=$repository->show($data['uuid']);
+        $user=$repository->show(['uuid'=>$data['uuid']]);
         //检查旧密码是否一致
         if(Hash::check($data['pre_password'],$user->password)){
             //更改密码
             $password=Hash::make($data['password']);
             $repository->update(['uuid'=>$data['uuid'],'password'=>$password]);
-            $codeStr = 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_SUCCESS';
-            $res = $this->messageResponse($codeStr, $user, '\App\Http\Resources\UserResource');
+            $resource=$this->getResource($this->getSlug(),'updatePassword');
+            $res = $this->messageResponse($this->getSlug(), 'UPDATEPASSWORD_SUCCESS', $user,$resource);
         }else{
-            $codeStr = 'ZBASEMENT_CODE_USER_UPDATEPASSWORD_ERROR';
-            $res = $this->messageResponse($codeStr);
+            $res = $this->messageResponse($this->getSlug(), 'UPDATEPASSWORD_FAILED');
         }
         return $res;
     }
