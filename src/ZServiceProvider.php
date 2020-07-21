@@ -101,6 +101,9 @@ class ZServiceProvider extends BaseServiceProvider
         $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code/auth.php', 'zbasement.code.auth');
         $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code/user.php', 'zbasement.code.user');
 //        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/fields.php', 'zbasement.fields');
-        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation.php', 'zbasement.validation');
+        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation/rules/auth.php', 'zbasement.validation.rules.auth');
+        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation/rules/user.php', 'zbasement.validation.rules.user');
+        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation/messages/auth.php', 'zbasement.validation.messages.auth');
+        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation/messages/user.php', 'zbasement.validation.messages.user');
     }
 }

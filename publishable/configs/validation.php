@@ -408,29 +408,7 @@ return [
                 ]
 
             ],
-            'currentPage'=> [
-                [
-                    'message' => [
-                        'integer' => '必须是大于等于0的整数',
-                        'min' => '不能小于0',
-                    ],
-                    'action'=>[
-                        'index',
-                    ],
-                ],
-            ],
-            'pageSize'=>[
-                [
-                    'message' => [
-                        'integer' => '必须是大于等于0的整数',
-                        'min' => '不能小于0',
-                    ],
-                    'action'=>[
-                        'index',
-                    ],
-                ]
 
-            ],
             'uuid'=>[
                 [
                     'message'=>[
