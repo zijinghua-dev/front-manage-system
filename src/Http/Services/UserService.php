@@ -101,7 +101,7 @@ class UserService extends BaseService implements UserServiceInterface
         if(Hash::check($data['pre_password'],$user->password)){
             //更改密码
             $password=Hash::make($data['password']);
-            $repository->update(['uuid'=>$data['uuid'],'password'=>$password]);
+            $user=$repository->update(['uuid'=>$data['uuid'],'password'=>$password]);
             $resource=$this->getResource($this->getSlug(),'updatePassword');
             $res = $this->messageResponse($this->getSlug(), 'UPDATEPASSWORD_SUCCESS', $user,$resource);
         }else{

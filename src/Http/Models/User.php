@@ -1,10 +1,10 @@
 <?php
 
 
-namespace App\Http\Models;
+namespace Zijinghua\Zvoyager\Http\Models;
 
 
-use App\Http\Contracts\UserModelInterface;
+use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
 use Zijinghua\Zbasement\Http\Models\BaseModel;
 
 class User extends BaseModel implements UserModelInterface

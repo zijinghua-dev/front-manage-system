@@ -2,6 +2,8 @@
 
 namespace Zijinghua\Zvoyager\Http\Controllers;
 
+use Zijinghua\Zbasement\Events\Api\InterfaceAfterEvent;
+use Zijinghua\Zbasement\Events\Api\InterfaceBeforeEvent;
 use Zijinghua\Zvoyager\Http\Requests\UpdatePasswordRequest;
 use Zijinghua\Zbasement\Http\Controllers\BaseController as BaseController;
 use Zijinghua\Zbasement\Http\Requests\IndexRequest;
@@ -24,8 +26,21 @@ class UserController extends BaseController
         $response=$this->execute($request,'show');
         return $response;
     }
-    public function index(IndexRequest $request){
-        $response=$this->execute($request,'index');
-        return $response;
-    }
+//    public function index(IndexRequest $request){
+//        //发送事件
+//        event(new InterfaceBeforeEvent($request));
+//        //从request里获取参数（slug，查询参数）----记得在service里面过滤参数，去掉不用的参数
+//        //找到对应的resource类
+//        if(!isset($this->slug)){
+//            $this->slug=getSlug($request);
+//        }
+//
+//        $data=$request->all();
+//        $service=$this->service($this->slug);
+//        $message= $service->index($data);
+//        $message->data->setPath('http://zvoyager.test/api/v1/user/index/');
+//        $response=$message->response();
+//        event(new InterfaceAfterEvent($request,$response));
+//        return $response;
+//    }
 }

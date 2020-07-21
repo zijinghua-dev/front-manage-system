@@ -98,8 +98,9 @@ class ZServiceProvider extends BaseServiceProvider
 
     protected function registerConfig()
     {
-        $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code.php', 'zbasement.code');
-        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/fields.php', 'zbasement.fields');
+        $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code/auth.php', 'zbasement.code.auth');
+        $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code/user.php', 'zbasement.code.user');
+//        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/fields.php', 'zbasement.fields');
         $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation.php', 'zbasement.validation');
     }
 }
