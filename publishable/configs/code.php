@@ -290,6 +290,12 @@ return [
                     'status' => true,
                     'message' => '已经接收到USER数据插入提交申请!'
                 ],
+                'failed'=>[
+                    'http_code' => 403,
+                    'code' => 'ZBASEMENT_CODE_USER_STORE_SUBMIT_FAILED',
+                    'status' => false,
+                    'message' => 'USER数据插入失败，该用户已经存在!'
+                ],
             ],
             'load'=>[
                 'rules'=>[
