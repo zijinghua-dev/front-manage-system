@@ -6,7 +6,9 @@ use Illuminate\Routing\Router;
 use TCG\Voyager\Http\Middleware\VoyagerAdminMiddleware;
 use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
 use Zijinghua\Zbasement\Providers\BaseServiceProvider;
+use Zijinghua\Zvoyager\Http\Contracts\GroupModelInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
+use Zijinghua\Zvoyager\Http\Models\Group;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 use Zijinghua\Zbasement\Http\Contracts\UserRepositoryInterface;
@@ -58,6 +60,11 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('userRepository', UserRepositoryInterface::class);
         $this->app->singleton('userRepository', function () {
             return new RestfulUserRepository();
+        });
+
+        $loader->alias('groupModel', GroupModelInterface::class);
+        $this->app->singleton('groupModel', function () {
+            return new Group();
         });
 
     }

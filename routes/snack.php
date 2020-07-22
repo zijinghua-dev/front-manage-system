@@ -12,10 +12,18 @@ Route::group(['middleware' => ['api','checkExternalNames'],'prefix' => 'v1',], f
         Route::post('/fetch', 'UserController@fetch');
         Route::get('/{uuid}', 'UserController@show');
         Route::put('/', 'UserController@update');
+        Route::post('/search', 'UserController@search');
         Route::put('/updatepassword', 'UserController@updatePassword');
     });
     Route::group(['prefix' => 'auth',], function () {
         Route::post('login', 'AuthController@login');
+    });
+    Route::group(['prefix' => 'group',], function () {
+        Route::post('/', 'GroupController@store');
+        Route::post('/index', 'GroupController@index');
+        Route::post('/fetch', 'GroupController@fetch');
+        Route::get('/{uuid}', 'GroupController@show');
+        Route::put('/', 'GroupController@update');
     });
 });
 //use TCG\Voyager\Models\DataType;
