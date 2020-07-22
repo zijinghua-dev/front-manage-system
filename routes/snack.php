@@ -23,6 +23,7 @@ Route::group(['middleware' => ['api','checkExternalNames'],'prefix' => 'v1',], f
         Route::post('/index', 'GroupController@index');
         Route::post('/fetch', 'GroupController@fetch');
         Route::get('/{uuid}', 'GroupController@show');
+        Route::post('/search', 'GroupController@search');
         Route::put('/', 'GroupController@update');
     });
 });

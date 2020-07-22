@@ -13,6 +13,7 @@ use Zijinghua\Zbasement\Http\Requests\StoreRequest;
 class UserController extends BaseController
 {
     public function updatePassword(UpdatePasswordRequest $request){
+        $this->authorize('user',[]);
         $response=$this->execute($request,'updatePassword');
         return $response;
     }

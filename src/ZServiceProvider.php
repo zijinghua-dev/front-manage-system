@@ -19,6 +19,7 @@ use Zijinghua\Zvoyager\Http\Services\AuthService;
 use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
 use Zijinghua\Zvoyager\Http\Services\UserService;
+use Zijinghua\Zvoyager\Providers\AuthServiceProvider;
 use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
 use Zijinghua\Zvoyager\Providers\RouteServiceProvider;
 
@@ -36,6 +37,7 @@ class ZServiceProvider extends BaseServiceProvider
 
     private function registerProvider(){
         $this->app->register(RouteServiceProvider::class);
+        $this->app->register(AuthServiceProvider::class);
     }
     protected function registerService(){
         $loader = AliasLoader::getInstance();
@@ -43,13 +45,9 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('userResource', UserResource::class);
 
         $loader->alias('authService', AuthServiceInterface::class);
-        $this->app->singleton('authService', function () {
-            return new AuthService();
-        });
+        $this->app->singleton('authService', AuthService::class);
         $loader->alias('userService', UserServiceInterface::class);
-        $this->app->singleton('userService', function () {
-            return new UserService();
-        });
+        $this->app->singleton('userService', UserService::class);
 
         $loader->alias('userModel', UserModelInterface::class);
         $this->app->singleton('userModel', function () {
