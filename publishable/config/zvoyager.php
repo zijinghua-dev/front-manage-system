@@ -10,8 +10,13 @@ return [
         'fields' => ['username', 'email', 'mobile', 'wechat_id', 'account']
     ],
     'auth' => [
-        'message' => [
-            'user_has_not_exists' => '用户不存在'
+        'failed' => [
+            'user_has_not_exists' => [
+                'message' => '用户不存在'
+            ],
+        ],
+        'validation' => [
+            'message' => '用户名密码错误'
         ]
     ]
 ];

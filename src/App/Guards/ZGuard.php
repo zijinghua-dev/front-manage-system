@@ -7,6 +7,7 @@ use Tymon\JWTAuth\JWT;
 use Tymon\JWTAuth\JWTGuard;
 use Zijinghua\Zvoyager\App\Providers\ClientRestfulUserProvider;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class ZGuard extends JWTGuard
 {
@@ -42,14 +43,15 @@ class ZGuard extends JWTGuard
     public function attempt(array $credentials = [], $login = true)
     {
         $result = $this->provider->retrieveByCredentials($credentials);
+
         if (!$result instanceof User && is_array($result)) {
-            $result['message'] = config('zvoyager.auth.message.user_has_not_exists');
+            $result['message'] = config('zvoyager.auth.failed.user_has_not_exists.message');
             return $result;
         }
         $this->lastAttempted = $user = $result;
 
         $validateResult = $this->hasValidCredentials($user, $credentials);
-        if (isset($validateResult['status']) && $validateResult['status']) {
+        if (!is_array($validateResult)) {
             return $login ? $this->login($user) : true;
         } else {
             return $validateResult;
@@ -66,7 +68,15 @@ class ZGuard extends JWTGuard
      */
     protected function hasValidCredentials($user, $credentials)
     {
-        $result = $this->provider->validateCredentials($user, $credentials);
+        if (Hash::check($credentials['password'], $user->password)) {
+            return $user;
+        }
+        $result = [
+            'message' => config('zvoyager.auth.failed.validation.message'),
+            'data' => [],
+            'status' => false,
+            'code' => null
+        ];
         return $result;
     }
 }
