@@ -18,33 +18,34 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-         'Zijinghua\Zbasement\Http\Repositories\RestfulUserRepository' => 'Zijinghua\Zvoyager\Policies\BasePolicy',
+//         'Zijinghua\Zbasement\Http\Repositories\RestfulUserRepository' => 'Zijinghua\Zvoyager\Policies\BasePolicy',
     ];
 
-    private function getSlugFromAlias($alias,$classType){
-
-    }
-    private function getSlugFromClass($class){
-        $basename=basename($class);
-        //去掉model，repository，service
-    }
+//    private function getSlugFromAlias($alias,$classType){
+//
+//    }
+//    private function getSlugFromClass($class){
+//        $basename=basename($class);
+//        //去掉model，repository，service
+//    }
     public function loadAuth()
     {
-        // 基本安全策略绑定所有在系统内注入repository
+        // 基本安全策略:绑定所有slug+action
 //        $bindings=app();
-
-
-            $dataTypes=Zsystem::typeSearch('repository');
-                foreach ($dataTypes as $key=>$dataType) {
-                    $object=resolve($key);
-                    $bindingClass=get_class($object);
-                    //凡是没有直接绑定的，都用basepolicy
-                    if(!isset($this->policies[$bindingClass])){
-                        $this->policies[$bindingClass] = BasePolicy::class;
-                    }
-                }
-
-                $this->registerPolicies();
+//        $repository=Zsystem::repository('dataType');
+//        $slugs=$repository->allSlugs();
+//        $repository=Zsystem::repository('action');
+//        $slugs=$repository->index();
+//                foreach ($dataTypes as $key=>$dataType) {
+//                    $object=resolve($key);
+//                    $bindingClass=get_class($object);
+//                    //凡是没有直接绑定的，都用basepolicy
+//                    if(!isset($this->policies[$bindingClass])){
+//                        $this->policies[$bindingClass] = BasePolicy::class;
+//                    }
+//                }
+//
+//                $this->registerPolicies();
     }
     /**
      * Register any authentication / authorization services.

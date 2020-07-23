@@ -2,6 +2,7 @@
 
 namespace Zijinghua\Zvoyager\Http\Controllers;
 
+use Zijinghua\Zbasement\Http\Traits\Slug;
 use Zijinghua\Zvoyager\Http\Requests\LoginRequest;
 use Zijinghua\Zbasement\Events\Api\InterfaceAfterEvent;
 use Zijinghua\Zbasement\Events\Api\InterfaceBeforeEvent;
@@ -9,6 +10,7 @@ use Zijinghua\Zbasement\Http\Controllers\BaseController as BaseController;
 
 class AuthController extends BaseController
 {
+    use Slug;
 //    use AuthenticatesUsers;
 //登录时可以是username，mobile，email和account，
 //wechatID登录从另一个接口进入，直接调用authService，把三方ID写到request中
@@ -16,8 +18,8 @@ class AuthController extends BaseController
         event(new InterfaceBeforeEvent($request));
         //从request里获取参数（slug，查询参数）----记得在service里面过滤参数，去掉不用的参数
         //找到对应的resource类
-        if(!isset($this->slug)){
-            $this->slug=getSlug($request);
+        if(empty($this->getSlug())){
+            $this->setSlug(getSlug($request));
         }
 
         $service=$this->service($this->slug);

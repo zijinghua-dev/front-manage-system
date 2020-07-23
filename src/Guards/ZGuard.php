@@ -34,17 +34,23 @@ class ZGuard extends JWTGuard
 
     public function attemptExternal(array $credentials = [], $login = true)
     {
-        $result = $this->provider->retrieveByCredentials($credentials);
-        if (!isset($result)) {
+        $user = $this->provider->retrieveByCredentials($credentials);
+        if (!isset($user)) {
             //如果没有，则注册一个
-            $result = $this->provider->createByCredentials($credentials);
+            $user = $this->provider->createByCredentials($credentials);
         }
-        $this->lastAttempted = $user = $result;
-
+        $this->lastAttempted = $user;
+        $token=null;
             if ($login) {
-                $this->login($user);
+                $token= $this->login($user);
+//                if(!isset($user->token)){
+//                    $user->append('token');
+//                }
+                $user->token=$token;
+//                $this->lastAttempted = $user;
+
             }
-            return $this->lastAttempted;
+        return ['user'=>$this->lastAttempted,'token'=>$token];
     }
     /**
      * Attempt to authenticate the user using the given credentials and return the token.
@@ -56,17 +62,22 @@ class ZGuard extends JWTGuard
      */
     public function attempt(array $credentials = [], $login = true)
     {
-        $result = $this->provider->retrieveByCredentials($credentials);
-        if (!isset($result)) {
-            return $result;
+        $user = $this->provider->retrieveByCredentials($credentials);
+        if (!isset($user)) {
+            return $user;
         }
-        $this->lastAttempted = $user = $result;
-
+        $this->lastAttempted = $user;
+        $token=null;
         if ($this->hasValidCredentials($user, $credentials)) {
             if($login){
-                $this->login($user);
+                $token= $this->login($user);
+//                if(!isset($user->token)){
+//                    $user->append('token');
+//                }
+                $user->token=$token;
+                $this->lastAttempted = $user;
             }
-            return $this->lastAttempted;
+            return ['user'=>$this->lastAttempted,'token'=>$user->token];
         }
 
         return false;
