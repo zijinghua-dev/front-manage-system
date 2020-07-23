@@ -7,21 +7,30 @@ use TCG\Voyager\Http\Middleware\VoyagerAdminMiddleware;
 use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
 use Zijinghua\Zbasement\Providers\BaseServiceProvider;
 use Zijinghua\Zvoyager\Http\Contracts\ActionModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\AuthorizeServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\DataTypeModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\GroupDataTypeModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\GroupPermissionModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\GroupServiceInterface;
+use Zijinghua\Zvoyager\Http\Middlewares\Authorize;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Models\Action;
 use Zijinghua\Zvoyager\Http\Models\DataType;
 use Zijinghua\Zvoyager\Http\Models\Group;
+use Zijinghua\Zvoyager\Http\Models\GroupDataType;
+use Zijinghua\Zvoyager\Http\Models\GroupPermission;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 use Zijinghua\Zbasement\Http\Contracts\UserRepositoryInterface;
 use Zijinghua\Zbasement\Http\Models\RestfulUser;
 use Zijinghua\Zbasement\Http\Repositories\RestfulUserRepository;
 use Zijinghua\Zvoyager\Http\Contracts\UserServiceInterface;
+use Zijinghua\Zvoyager\Http\Services\AuthorizeService;
 use Zijinghua\Zvoyager\Http\Services\AuthService;
 use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
+use Zijinghua\Zvoyager\Http\Services\GroupService;
 use Zijinghua\Zvoyager\Http\Services\UserService;
 use Zijinghua\Zvoyager\Providers\AuthServiceProvider;
 use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
@@ -50,6 +59,7 @@ class ZServiceProvider extends BaseServiceProvider
 
         $loader->alias('authService', AuthServiceInterface::class);
         $this->app->singleton('authService', AuthService::class);
+
         $loader->alias('userService', UserServiceInterface::class);
         $this->app->singleton('userService', UserService::class);
 
@@ -69,14 +79,33 @@ class ZServiceProvider extends BaseServiceProvider
             return new Group();
         });
 
+        $loader->alias('groupService', GroupServiceInterface::class);
+        $this->app->singleton('groupService', function () {
+            return new GroupService();
+        });
+
         $loader->alias('dataTypeModel', DataTypeModelInterface::class);
         $this->app->singleton('dataTypeModel', function () {
             return new DataType();
         });
 
+        $loader->alias('groupDataTypeModel', GroupDataTypeModelInterface::class);
+        $this->app->singleton('groupDataTypeModel', function () {
+            return new GroupDataType();
+        });
+
+
         $loader->alias('actionModel', ActionModelInterface::class);
         $this->app->singleton('actionModel', function () {
             return new Action();
+        });
+
+        $loader->alias('authorizeService', AuthorizeServiceInterface::class);
+        $this->app->singleton('authorizeService', AuthorizeService::class);
+
+        $loader->alias('groupPermissionModel', GroupPermissionModelInterface::class);
+        $this->app->singleton('groupPermissionModel', function () {
+            return new GroupPermission();
         });
     }
     public function boot(Router $router, Dispatcher $event)
@@ -88,7 +117,12 @@ class ZServiceProvider extends BaseServiceProvider
         \Auth::provider('zuserprovider', function () {
             return new ClientRestfulUserProvider();
         });
+        $this->registerMiddleware($router);
+    }
+
+    protected function registerMiddleware(Router $router){
         $router->aliasMiddleware('checkExternalNames', CheckExternalNames::class);
+        $router->aliasMiddleware('zAuthorize', Authorize::class);
     }
 
     public function registerConsoleCommands()

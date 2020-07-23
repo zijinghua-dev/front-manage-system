@@ -11,15 +11,16 @@ use Zijinghua\Zbasement\Http\Requests\ShowRequest;
 
 class GroupController extends BaseController
 {
-    public function show(ShowRequest $request){
-        $ability=Gate::abilities();
-        $policy=Gate::policies();
-//        if(Gate::has('users_browse')){
+//    public function show(ShowRequest $request){
+////        $ability=Gate::abilities();
+////        $policy=Gate::policies();
+////        if(Gate::has('users_browse')){
+////            return ;
+////        }
+//        //slug+action+groupid+userid
+//        if(Gate::allows('users_browse',1)){
 //            return ;
 //        }
-        if(Gate::allows('users_browse')){
-            return ;
-        }
-        return ;
-    }
+//        return ;
+//    }
 }

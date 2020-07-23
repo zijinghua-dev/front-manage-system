@@ -5,6 +5,7 @@ namespace Zijinghua\Zvoyager\Policies;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use TCG\Voyager\Contracts\User;
 use TCG\Voyager\Facades\Voyager;
+use Zijinghua\Zbasement\Facades\Zsystem;
 
 class BasePolicy
 {
@@ -29,9 +30,9 @@ class BasePolicy
         $user = $arguments[0];
 
         /** @var $model */
-        $model = $arguments[1];
+        $parameters = $arguments[1];
 
-        return $this->checkPermission($user, $model, $name);
+        return $this->checkPermission($user, $parameters);
     }
 
     /**
@@ -42,11 +43,11 @@ class BasePolicy
      *
      * @return bool
      */
-    public function restore(User $user, $model)
-    {
-        // Can this be restored?
-        return $model->deleted_at && $this->checkPermission($user, $model, 'delete');
-    }
+//    public function restore(User $user, $model)
+//    {
+//        // Can this be restored?
+//        return $model->deleted_at && $this->checkPermission($user, $model, 'delete');
+//    }
 
     /**
      * Determine if the given model can be deleted by the user.
@@ -56,13 +57,13 @@ class BasePolicy
      *
      * @return bool
      */
-    public function delete(User $user, $model)
-    {
-        // Has this already been deleted?
-        $soft_delete = $model->deleted_at && in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($model));
-
-        return !$soft_delete && $this->checkPermission($user, $model, 'delete');
-    }
+//    public function delete(User $user, $model)
+//    {
+//        // Has this already been deleted?
+//        $soft_delete = $model->deleted_at && in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($model));
+//
+//        return !$soft_delete && $this->checkPermission($user, $model, 'delete');
+//    }
 
     /**
      * Check if user has an associated permission.
@@ -73,8 +74,10 @@ class BasePolicy
      *
      * @return bool
      */
-    protected function checkPermission(User $user, $action)
+    protected function checkPermission( $user, $parameters)
     {
+        $service=Zsystem::service('authorize');
+        return $service->checkPermission($user,$parameters);
 //        if (!isset(self::$datatypes[get_class($model)])) {
 //            $dataType = Voyager::model('DataType');
 //            self::$datatypes[get_class($model)] = $dataType->where('model_name', get_class($model))->first();
@@ -82,6 +85,6 @@ class BasePolicy
 //
 //        $dataType = self::$datatypes[get_class($model)];
 
-        return $user->hasPermission($action.'_'.$dataType->name);
+//        return ;
     }
 }

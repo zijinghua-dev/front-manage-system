@@ -18,7 +18,7 @@ Route::group(['middleware' => ['api','checkExternalNames'],'prefix' => 'v1',], f
     Route::group(['prefix' => 'auth',], function () {
         Route::post('login', 'AuthController@login');
     });
-    Route::group(['prefix' => 'group','middleware'=>['jwt.auth']], function () {
+    Route::group(['prefix' => 'group','middleware'=>['auth:api','zAuthorize']], function () {
         Route::post('/', 'GroupController@store');
         Route::post('/index', 'GroupController@index');
         Route::post('/fetch', 'GroupController@fetch');

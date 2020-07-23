@@ -34,8 +34,9 @@ class ClientRestfulUserProvider implements UserProvider
      */
     public function retrieveById($identifier)
     {
-        $user = $this->userService->show($identifier);
-        return $user;
+        $userService=Zsystem::service('user');
+        $response = $userService->show(['uuid'=>$identifier]);
+        return $response->data;
     }
 
     /**
