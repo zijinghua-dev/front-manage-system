@@ -9,5 +9,5 @@ use Zijinghua\Zvoyager\Http\Contracts\GroupDataTypeModelInterface;
 
 class GroupDataType extends BaseModel implements GroupDataTypeModelInterface
 {
-    protected $table='group_datatype';
+    protected $table='group_datatypes';
 }

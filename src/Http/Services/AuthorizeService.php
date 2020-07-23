@@ -47,6 +47,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $permissions=$repository->index($parameter);
         return $permissions;
     }
+
     public function checkPermission($parameters){
 //        $userId,$groupId,$dataTypeId,$objectId,$actionId
 
