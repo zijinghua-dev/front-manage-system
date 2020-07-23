@@ -6,8 +6,12 @@ use Illuminate\Routing\Router;
 use TCG\Voyager\Http\Middleware\VoyagerAdminMiddleware;
 use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
 use Zijinghua\Zbasement\Providers\BaseServiceProvider;
+use Zijinghua\Zvoyager\Http\Contracts\ActionModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\DataTypeModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupModelInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
+use Zijinghua\Zvoyager\Http\Models\Action;
+use Zijinghua\Zvoyager\Http\Models\DataType;
 use Zijinghua\Zvoyager\Http\Models\Group;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
@@ -65,6 +69,15 @@ class ZServiceProvider extends BaseServiceProvider
             return new Group();
         });
 
+        $loader->alias('dataTypeModel', DataTypeModelInterface::class);
+        $this->app->singleton('dataTypeModel', function () {
+            return new DataType();
+        });
+
+        $loader->alias('actionModel', ActionModelInterface::class);
+        $this->app->singleton('actionModel', function () {
+            return new Action();
+        });
     }
     public function boot(Router $router, Dispatcher $event)
     {

@@ -32,11 +32,18 @@ class AuthServiceProvider extends ServiceProvider
     {
         // 基本安全策略:绑定所有slug+action
 //        $bindings=app();
-//        $repository=Zsystem::repository('dataType');
-//        $slugs=$repository->allSlugs();
-//        $repository=Zsystem::repository('action');
-//        $slugs=$repository->index();
-//                foreach ($dataTypes as $key=>$dataType) {
+        $repository=Zsystem::repository('dataType');
+        $slugs=$repository->all('slug')->pluck('slug')->toArray();
+        $repository=Zsystem::repository('action');
+        $actions=$repository->all('name')->pluck('name')->toArray();
+        foreach ($slugs as $key=>$slug) {
+            foreach ($actions as $key=>$action){
+                $ability=$slug.'_'.$action;
+                if(!Gate::has($ability)){
+                    Gate::define($ability,'Zijinghua\Zvoyager\Policies\BasePolicy@checkPermission');
+                }
+            }
+        }
 //                    $object=resolve($key);
 //                    $bindingClass=get_class($object);
 //                    //凡是没有直接绑定的，都用basepolicy
