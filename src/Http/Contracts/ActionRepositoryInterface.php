@@ -4,7 +4,7 @@
 namespace Zijinghua\Zvoyager\Http\Contracts;
 
 
-interface GroupSlugModelInterface
+interface ActionRepositoryInterface
 {
 
 }

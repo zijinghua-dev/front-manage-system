@@ -109,4 +109,20 @@ class UserService extends BaseService implements UserServiceInterface
         }
         return $res;
     }
+
+    public function groupIds($userId){
+        $repository=Zsystem::repository('dataType');
+        $dataTypeId=$repository->key('user');//slugId就是datatypeId
+        $repository=$this->repository('groupObject');
+        $parameter['search'][]=['field'=>'object_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
+        $parameter['search'][]=['field'=>'datatype_id','value'=>$dataTypeId,'filter'=>'=','algorithm'=>'and'];
+        $groups=$repository->index($parameter);
+        if(isset($groups)&&($groups->count())){
+            $groups=$groups->pluck('group_id')->toArray();
+            $result=array_unique($groups);
+            return $result;
+        }
+
+
+    }
 }

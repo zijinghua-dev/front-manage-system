@@ -106,7 +106,7 @@ class ClientRestfulUserProvider implements UserProvider
         foreach ($credentials as $key=>$value){
             if(strtolower($key)=='account'){
                 foreach (getConfigValue('zbasement.fields.auth.internal') as $field){
-                    $parameters['search'][]=['field'=>$field,'value'=>$value,'filter'=>'=','algothm'=>'or'];
+                    $parameters['search'][]=['field'=>$field,'value'=>$value,'filter'=>'=','algorithm'=>'or'];
                 }
                 break;
             }

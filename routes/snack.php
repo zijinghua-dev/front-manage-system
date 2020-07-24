@@ -5,7 +5,7 @@
  * Date: 2020-01-17
  * Time: 11:33
  */
-Route::group(['middleware' => ['api','checkExternalNames'],'prefix' => 'v1',], function () {
+Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',], function () {
     Route::group(['prefix' => 'user',], function () {
         Route::post('/', 'UserController@store');
         Route::post('/index', 'UserController@index');
@@ -18,13 +18,16 @@ Route::group(['middleware' => ['api','checkExternalNames'],'prefix' => 'v1',], f
     Route::group(['prefix' => 'auth',], function () {
         Route::post('login', 'AuthController@login');
     });
-    Route::group(['prefix' => 'group','middleware'=>['auth:api','zAuthorize']], function () {
+    Route::group(['prefix' => 'group','middleware'=>['auth:api','zCheckGroup','zAuthorize']], function () {
         Route::post('/', 'GroupController@store');
         Route::post('/index', 'GroupController@index');
         Route::post('/fetch', 'GroupController@fetch');
         Route::get('/{uuid}', 'GroupController@show');
         Route::post('/search', 'GroupController@search');
         Route::put('/', 'GroupController@update');
+        Route::delete('/{uuid}', 'GroupController@destroy');
+        Route::post('/delete', 'GroupController@delete');//批量删除，参数名为uuid，可以传array
+        Route::post('/clear', 'GroupController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
     });
 });
 //use TCG\Voyager\Models\DataType;

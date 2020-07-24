@@ -6,6 +6,7 @@ namespace Zijinghua\Zvoyager\Http\Services;
 
 use Illuminate\Support\Str;
 use Zijinghua\Zbasement\Facades\Zsystem;
+use Zijinghua\Zbasement\Http\Responses\MessageResponse;
 use Zijinghua\Zbasement\Http\Services\BaseService;
 use Zijinghua\Zvoyager\Http\Contracts\GroupServiceInterface;
 
@@ -28,8 +29,8 @@ class GroupService extends BaseService implements GroupServiceInterface
 
     public function parent($groupId){
         $repository=Zsystem::repository('groupObject');
-        $parameter['search'][]=['field'=>'object_id','value'=>$groupId,'filter'=>'=','algothm'=>'and'];
-        $parameter['search'][]=['field'=>'datatype_id','value'=>$this->dataTypeId,'filter'=>'=','algothm'=>'and'];
+        $parameter['search'][]=['field'=>'object_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+        $parameter['search'][]=['field'=>'datatype_id','value'=>$this->dataTypeId,'filter'=>'=','algorithm'=>'and'];
         $parent=$repository->fetch($parameter);
         if(isset($parent)){
             return $parent;
@@ -40,42 +41,57 @@ class GroupService extends BaseService implements GroupServiceInterface
     //需要父组本身有这些类型的对象，才能分配给子组
     public function dataTypes($groupId){
         $repository=Zsystem::repository('groupDataType');
-        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algothm'=>'and'];
+        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
         $dataTypes=$repository->index($parameter);
         if(isset($dataTypes)){
             return $dataTypes->pluck('id');
         }
     }
 
-    public function hasDataType($groupId,$dataTypeId){
-        $repository=Zsystem::repository('groupDataType');
-        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algothm'=>'and'];
-        $parameter['search'][]=['field'=>'datatype_id','value'=>$dataTypeId,'filter'=>'=','algothm'=>'and'];
-        $dataType=$repository->fetch($parameter);
-        if(isset($dataType)){
-            return true;
+    public function hasObjects($groupId,$parameters){
+        if(isset($parameters['slug'])){
+            $repository=Zsystem::repository('dataType');
+            $dataTypeId=$repository->key($parameters['slug']);
+        }elseif(isset($parameters['dataTypeId'])){
+            $dataTypeId=$parameters['dataTypeId'];
         }
-        return false;
+        if(!isset($dataTypeId)){
+            throw new \Exception('group service 参数出错！');
+        }
+        $repository=Zsystem::repository('groupObject');
+        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+        $parameter['search'][]=['field'=>'datatype_id','value'=>$dataTypeId,'filter'=>'=','algorithm'=>'and'];
+        $parameter['search'][]=['field'=>'object_uuid','value'=>$parameters['uuid'],'filter'=>'=','algorithm'=>'and'];
+        $objects=$repository->fetch($parameter);
+        if(!isset($objects)){
+            $messageResponse=$this->messageResponse('group','search.failed');
+        }else{
+            $messageResponse=$this->messageResponse('group','search.success');
+        }
+        return $messageResponse;
     }
-    public function hasDataTypeFromSlug($groupId,$slug){
-        //$slug先转成复数形式
-        $pslug=Str::plural($slug);
-        $repository=Zsystem::repository('dataType');
-        $parameter['search'][]=['field'=>'slug','value'=>$pslug];
-        $dataType=$repository->fetch($parameter);
-        if(!isset($dataType)){
-            return false;
+
+    public function hasDataType($groupId,$parameters){
+        if(isset($parameters['slug'])){
+            $repository=Zsystem::repository('dataType');
+            $dataTypeId=$repository->key($parameters['slug']);
+        }elseif(isset($parameters['dataTypeId'])){
+            $dataTypeId=$parameters['dataTypeId'];
+        }
+        if(!isset($dataTypeId)){
+            throw new \Exception('group service 参数出错！');
         }
 
-        unset($parameter);
         $repository=Zsystem::repository('groupDataType');
-        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algothm'=>'and'];
-        $parameter['search'][]=['field'=>'datatype_id','value'=>$dataType->Id,'filter'=>'=','algothm'=>'and'];
+        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+        $parameter['search'][]=['field'=>'datatype_id','value'=>$dataTypeId,'filter'=>'=','algorithm'=>'and'];
         $dataType=$repository->fetch($parameter);
-        if(isset($dataType)){
-            return true;
+        if(!isset($dataType)){
+            $messageResponse=$this->messageResponse('group','search.failed');
+        }else{
+            $messageResponse=$this->messageResponse('group','search.success');
         }
-        return false;
+        return $messageResponse;
     }
 
 }

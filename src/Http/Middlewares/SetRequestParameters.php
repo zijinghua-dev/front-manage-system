@@ -6,10 +6,12 @@ namespace Zijinghua\Zvoyager\Http\Middlewares;
 use Closure;
 use Exception;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Zijinghua\Zvoyager\Traits\Parameters;
 
 
-class CheckExternalNames
+class SetRequestParameters
 {
+    use Parameters;
     /**
      * 处理传入的请求
      *
@@ -19,6 +21,8 @@ class CheckExternalNames
      */
     public function handle($request, Closure $next)
     {
+        $request=$this->setAbility($request);
+        $request=$this->setObject($request);
         $data = $request->all();
         foreach ($data as $key=>$value){
             if(in_array($key,getConfigValue('zbasement.fields.auth.external'))){
