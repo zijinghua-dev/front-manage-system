@@ -4,6 +4,8 @@ namespace Zijinghua\Zvoyager;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Models\GroupObject;
+use Zijinghua\Zvoyager\Http\Models\GroupObjectPermission;
+use Zijinghua\Zvoyager\Http\Models\GroupRolePermission;
 use Zijinghua\Zvoyager\Http\Repositories\ActionRepository;
 use Zijinghua\Zbasement\Http\Repositories\Contracts\UserRepositoryInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ActionRepositoryInterface;
@@ -18,7 +20,7 @@ use Zijinghua\Zvoyager\Http\Contracts\DataTypeModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\DataTypeRepositoryInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupDataTypeModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupModelInterface;
-use Zijinghua\Zvoyager\Http\Contracts\GroupPermissionModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\GroupUserPermissionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\Authorize;
 use Zijinghua\Zvoyager\Http\Middlewares\SetRequestParameters;
@@ -26,7 +28,7 @@ use Zijinghua\Zvoyager\Http\Models\Action;
 use Zijinghua\Zvoyager\Http\Models\DataType;
 use Zijinghua\Zvoyager\Http\Models\Group;
 use Zijinghua\Zvoyager\Http\Models\GroupDataType;
-use Zijinghua\Zvoyager\Http\Models\GroupPermission;
+use Zijinghua\Zvoyager\Http\Models\GroupUserPermission;
 use Zijinghua\Zvoyager\Http\Repositories\GroupRepository;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
@@ -129,9 +131,19 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('authorizeService', AuthorizeServiceInterface::class);
         $this->app->singleton('authorizeService', AuthorizeService::class);
 
-        $loader->alias('groupPermissionModel', GroupPermissionModelInterface::class);
-        $this->app->singleton('groupPermissionModel', function () {
-            return new GroupPermission();
+        $loader->alias('groupUserPermissionModel', GroupUserPermissionModelInterface::class);
+        $this->app->singleton('groupUserPermissionModel', function () {
+            return new GroupUserPermission();
+        });
+
+        $loader->alias('groupRolePermissionModel', GroupRolePermissionModelInterface::class);
+        $this->app->singleton('groupRolePermissionModel', function () {
+            return new GroupRolePermission();
+        });
+
+        $loader->alias('groupObjectPermissionModel', GroupObjectPermissionModelInterface::class);
+        $this->app->singleton('groupObjectPermissionModel', function () {
+            return new GroupObjectPermission();
         });
 
         $loader->alias('groupObjectModel', GroupObjectModelInterface::class);

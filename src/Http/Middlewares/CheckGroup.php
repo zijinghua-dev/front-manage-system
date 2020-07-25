@@ -34,7 +34,7 @@ class CheckGroup
         }
 
         //然后才看这个对象是不是在这个组内
-        $messageResponse=$service->hasObjects($request['groupId'],['dataTypeId'=>$request['dataTypeId'],'uuid'=>$request['uuid']]);
+        $messageResponse=$service->hasObjects($request['groupId'],['dataTypeId'=>$request['dataTypeId'],'objectId'=>$request['objectId']]);
         if(!$messageResponse->code->status){
             return $messageResponse->response();
         }

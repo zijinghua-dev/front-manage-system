@@ -22,10 +22,10 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',],
         Route::post('/', 'GroupController@store');
         Route::post('/index', 'GroupController@index');
         Route::post('/fetch', 'GroupController@fetch');
-        Route::get('/{uuid}', 'GroupController@show');
+        Route::get('/{groupId}', 'GroupController@show');
         Route::post('/search', 'GroupController@search');
         Route::put('/', 'GroupController@update');
-        Route::delete('/{uuid}', 'GroupController@destroy');
+        Route::delete('/{groupId}', 'GroupController@destroy');
         Route::post('/delete', 'GroupController@delete');//批量删除，参数名为uuid，可以传array
         Route::post('/clear', 'GroupController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
     });

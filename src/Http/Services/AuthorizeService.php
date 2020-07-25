@@ -43,7 +43,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
 //获取该用户在该组的permissions
         $parameter['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
         $parameter['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
-        $repository=Zsystem::repository('groupPermission');
+        $repository=Zsystem::repository('groupUserPermission');
         $permissions=$repository->index($parameter);
         return $permissions;
     }

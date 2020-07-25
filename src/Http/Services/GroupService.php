@@ -61,7 +61,7 @@ class GroupService extends BaseService implements GroupServiceInterface
         $repository=Zsystem::repository('groupObject');
         $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
         $parameter['search'][]=['field'=>'datatype_id','value'=>$dataTypeId,'filter'=>'=','algorithm'=>'and'];
-        $parameter['search'][]=['field'=>'object_uuid','value'=>$parameters['uuid'],'filter'=>'=','algorithm'=>'and'];
+        $parameter['search'][]=['field'=>'object_id','value'=>$parameters['objectId'],'filter'=>'=','algorithm'=>'and'];
         $objects=$repository->fetch($parameter);
         if(!isset($objects)){
             $messageResponse=$this->messageResponse('group','search.failed');

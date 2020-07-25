@@ -13,7 +13,7 @@ class CheckObject
     {
         //检查这个对象在这个组有没有可操作的权限
         $slug=getSlug($request);
-        $uuids=getUuids($request);
+        $objectId=$request['objectId'];
         $groupId=getGroup($request);
         //首先是这个组能否操作这个类型的对象
         $service=Zsystem::service('group');
@@ -23,7 +23,7 @@ class CheckObject
         }
 
         //然后才看这个对象是不是在这个组内
-        $messageResponse=$service->hasObjectsFromUuid($uuids);
+        $messageResponse=$service->hasObjects($objectId);
         if(!$messageResponse->code->status){
             return $messageResponse->response();
         }

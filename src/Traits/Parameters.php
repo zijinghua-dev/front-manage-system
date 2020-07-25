@@ -10,6 +10,8 @@ use Zijinghua\Zbasement\Facades\Zsystem;
 
 trait Parameters
 {
+    //同时将uuid转为id
+    //不必再做
     public function setObject($request){
         $data = $request->all();
         if(!isset($data['uuid'])){
@@ -47,12 +49,8 @@ public function setAbility($request){
     //然后拿到组ID
     //如果组ID为空，意味着用户要对自己创建的对象进行操作
     //当前组,前端传入的是uuid
-    if(!isset($data['groupUuid'])){
-        $data['groupUuid']=null;
+    if(!isset($data['groupId'])){
         $data['groupId']=null;
-    }elseif(!isset($data['groupId'])){
-        $repository=Zsystem::repository('group');
-        $data['groupId']=$repository->key($data['groupUuid']);
     }
             $request->replace($data);
     return $request;
