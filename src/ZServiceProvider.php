@@ -2,32 +2,35 @@
 namespace Zijinghua\Zvoyager;
 
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
+//use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
+use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
+use Zijinghua\Zvoyager\Http\Middlewares\Uuid;
 use Zijinghua\Zvoyager\Http\Models\GroupObject;
 use Zijinghua\Zvoyager\Http\Models\GroupObjectPermission;
 use Zijinghua\Zvoyager\Http\Models\GroupRolePermission;
 use Zijinghua\Zvoyager\Http\Repositories\ActionRepository;
 use Zijinghua\Zbasement\Http\Repositories\Contracts\UserRepositoryInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ActionRepositoryInterface;
-use Zijinghua\Zvoyager\Http\Repositories\DataTypeRepository;
+use Zijinghua\Zvoyager\Http\Repositories\DatatypeRepository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Zijinghua\Zbasement\Http\Models\Contracts\UserModelInterface;
 use Zijinghua\Zbasement\Providers\BaseServiceProvider;
 use Zijinghua\Zvoyager\Http\Contracts\ActionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\AuthorizeServiceInterface;
-use Zijinghua\Zvoyager\Http\Contracts\DataTypeModelInterface;
-use Zijinghua\Zvoyager\Http\Contracts\DataTypeRepositoryInterface;
-use Zijinghua\Zvoyager\Http\Contracts\GroupDataTypeModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\DatatypeModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\DatatypeRepositoryInterface;
+use Zijinghua\Zvoyager\Http\Contracts\GroupDatatypeModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupUserPermissionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\Authorize;
 use Zijinghua\Zvoyager\Http\Middlewares\SetRequestParameters;
 use Zijinghua\Zvoyager\Http\Models\Action;
-use Zijinghua\Zvoyager\Http\Models\DataType;
+use Zijinghua\Zvoyager\Http\Models\Datatype;
 use Zijinghua\Zvoyager\Http\Models\Group;
-use Zijinghua\Zvoyager\Http\Models\GroupDataType;
+use Zijinghua\Zvoyager\Http\Models\GroupDatatype;
 use Zijinghua\Zvoyager\Http\Models\GroupUserPermission;
 use Zijinghua\Zvoyager\Http\Repositories\GroupRepository;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
@@ -100,20 +103,20 @@ class ZServiceProvider extends BaseServiceProvider
             return new GroupService();
         });
 
-        $loader->alias('dataTypeModel', DataTypeModelInterface::class);
-        $this->app->singleton('dataTypeModel', function () {
-            return new DataType();
+        $loader->alias('datatypeModel', DatatypeModelInterface::class);
+        $this->app->singleton('datatypeModel', function () {
+            return new Datatype();
         });
 
-        $loader->alias('dataTypeRepository', DataTypeRepositoryInterface::class);
-        $this->app->singleton('dataTypeRepository', function () {
-            return new DataTypeRepository();
+        $loader->alias('datatypeRepository', DatatypeRepositoryInterface::class);
+        $this->app->singleton('datatypeRepository', function () {
+            return new DatatypeRepository();
         });
 
 
-        $loader->alias('groupDataTypeModel', GroupDataTypeModelInterface::class);
-        $this->app->singleton('groupDataTypeModel', function () {
-            return new GroupDataType();
+        $loader->alias('groupDatatypeModel', GroupDatatypeModelInterface::class);
+        $this->app->singleton('groupDatatypeModel', function () {
+            return new GroupDatatype();
         });
 
 
@@ -167,6 +170,9 @@ class ZServiceProvider extends BaseServiceProvider
         $router->aliasMiddleware('setRequestParameters', SetRequestParameters::class);
         $router->aliasMiddleware('zAuthorize', Authorize::class);
         $router->aliasMiddleware('zCheckGroup', CheckGroup::class);
+        $router->aliasMiddleware('zUuid', Uuid::class);
+        $router->aliasMiddleware('zCheckParent', CheckParent::class);
+//        $router->aliasMiddleware('checkExternalNames', CheckExternalNames::class);
 
     }
 

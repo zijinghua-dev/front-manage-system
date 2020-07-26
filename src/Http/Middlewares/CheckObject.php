@@ -17,7 +17,7 @@ class CheckObject
         $groupId=getGroup($request);
         //首先是这个组能否操作这个类型的对象
         $service=Zsystem::service('group');
-        $messageResponse=$service->hasDataTypeFromSlug($slug);
+        $messageResponse=$service->hasDatatype($slug);
         if(!$messageResponse->code->status){
             return $messageResponse->response();
         }

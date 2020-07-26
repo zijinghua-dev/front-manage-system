@@ -10,5 +10,5 @@ use Zijinghua\Zvoyager\Http\Contracts\GroupUserPermissionModelInterface;
 
 class GroupRolePermission extends BaseModel implements GroupRolePermissionModelInterface
 {
-    protected $table='group_user_permissions';
+    protected $table='group_role_permissions';
 }

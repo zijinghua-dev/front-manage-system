@@ -65,6 +65,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     }
 
     public function checkUserPermission($parameters){
+        //改变组的属性，想要添加datatype的时候，必须父组有这个datatype
         $groupService=Zsystem::service('group');
         $parent=true;
         while (isset($parent)){

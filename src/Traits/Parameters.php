@@ -33,9 +33,9 @@ public function setAbility($request){
     if(!isset($data['slug'])){
         $data['slug']=getSlug($request);
     }
-    if(!isset($data['dataTypeId'])){
-        $repository=Zsystem::repository('dataType');
-        $data['dataTypeId']=$repository->key($data['slug']);//slugId就是datatypeId
+    if(!isset($data['datatypeId'])){
+        $repository=Zsystem::repository('datatype');
+        $data['datatypeId']=$repository->key($data['slug']);//slugId就是datatypeId
     }
     if(!isset($data['action'])){
         list($class, $method) = explode('@', $request->route()->getActionName());

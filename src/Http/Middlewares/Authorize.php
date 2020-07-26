@@ -24,7 +24,7 @@ class Authorize
         //解析出当前用户，检查权限
         $user=Auth::guard('api')->user();
         $service=Zsystem::service('authorize');
-        $parameters=['userId'=>$user->id,'groupId'=>$request['groupId'],'dataTypeId'=>$request['dataTypeId'],
+        $parameters=['userId'=>$user->id,'groupId'=>$request['groupId'],'datatypeId'=>$request['datatypeId'],
             'actionId'=>$request['actionId'],'slug'=>$request['slug'],'action'=>$request['action']];
         $messageResponse = $service->checkPermission($parameters);
         if($messageResponse->code->status){

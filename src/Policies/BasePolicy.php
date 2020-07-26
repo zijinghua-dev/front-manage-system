@@ -79,7 +79,7 @@ class BasePolicy
         $service=Zsystem::service('authorize');
         return $service->checkPermission($user,$parameters);
 //        if (!isset(self::$datatypes[get_class($model)])) {
-//            $dataType = Voyager::model('DataType');
+//            $dataType = Voyager::model('Datatype');
 //            self::$datatypes[get_class($model)] = $dataType->where('model_name', get_class($model))->first();
 //        }
 //
