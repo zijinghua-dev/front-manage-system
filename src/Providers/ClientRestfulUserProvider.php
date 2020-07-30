@@ -35,7 +35,8 @@ class ClientRestfulUserProvider implements UserProvider
     public function retrieveById($identifier)
     {
         $userService=Zsystem::service('user');
-        $response = $userService->show(['uuid'=>$identifier]);
+        $parameters['search'][]=['field'=>'uuid','value'=>$identifier];
+        $response = $userService->fetch($parameters);
         return $response->data;
     }
 
@@ -111,7 +112,7 @@ class ClientRestfulUserProvider implements UserProvider
                 break;
             }
             if($key!="password"){
-                $parameters['search'][]=['field'=>$key,'value'=>$value];
+                $parameters['search'][]=['field'=>$key,'value'=>$value,'filter'=>'=','algorithm'=>'or'];
                 break;
             }
 

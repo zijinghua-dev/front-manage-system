@@ -38,14 +38,16 @@ class Uuid
             if(count($id)==1){
                 $id=$id[0];
             }
-            if(isset($data['uuid'])){
-                unset($data['uuid']);
-                $data['id']=$id;
-            }elseif(isset($data['search'])){
+            if(isset($data['search'])){
                 if($data['search']['field']=='uuid'){
                     $data['search']['field']=='id';
                     $data['search']['value']==$id;
                 }
+            }else{
+                if(isset($data['uuid'])) {
+                    unset($data['uuid']);
+                }
+                $data['id']=$id;
             }
             $request->replace($data);
         }
