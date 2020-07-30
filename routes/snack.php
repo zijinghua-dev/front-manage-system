@@ -28,7 +28,7 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',],
 
 
         Route::group(['middleware' => 'zUuid','prefix' => 'user'], function () {
-            Route::post('/', 'UserController@store');
+
             Route::post('/index', 'UserController@index');
             Route::post('/fetch', 'UserController@fetch');
             Route::get('/{uuid}', 'UserController@show');
