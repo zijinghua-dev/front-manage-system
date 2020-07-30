@@ -36,9 +36,17 @@ class Uuid
         if(!emptyObjectOrArray($id)){
             $data = $request->all();
             if(count($id)==1){
-                $data['id']=$id[0];
+                $id=$id[0];
             }
-            $data['uuid']=$uuid;
+            if(isset($data['uuid'])){
+                unset($data['uuid']);
+                $data['id']=$id;
+            }elseif(isset($data['search'])){
+                if($data['search']['field']=='uuid'){
+                    $data['search']['field']=='id';
+                    $data['search']['value']==$id;
+                }
+            }
             $request->replace($data);
         }
 
