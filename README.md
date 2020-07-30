@@ -1,5 +1,5 @@
 # User Authentication System
-##Install
+## Install
 1.安装命令
 >composer require zijinghua/zvoyager
 
