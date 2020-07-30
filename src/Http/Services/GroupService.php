@@ -28,23 +28,21 @@ class GroupService extends BaseService implements GroupServiceInterface
 
     }
 
-    public function parent($groupId){
-        $repository=Zsystem::repository('groupObject');
-        $parameter['search'][]=['field'=>'object_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
-        $parameter['search'][]=['field'=>'datatype_id','value'=>$this->datatypeId,'filter'=>'=','algorithm'=>'and'];
+    public function parent($parentId){
+        $repository=Zsystem::repository('group');
+        $parameter['search'][]=['field'=>'id','value'=>$parentId];
         $parent=$repository->fetch($parameter);
         if(isset($parent)){
             return $parent;
         }
     }
 
-    public function parentId($groupId){
-        $repository=Zsystem::repository('groupObject');
-        $parameter['search'][]=['field'=>'object_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
-        $parameter['search'][]=['field'=>'datatype_id','value'=>$this->datatypeId,'filter'=>'=','algorithm'=>'and'];
-        $parent=$repository->fetch($parameter);
-        if(isset($parent)){
-            return $parent->group_id;
+    public function parentId($childId){
+        $repository=Zsystem::repository('group');
+        $parameter['search'][]=['field'=>'id','value'=>$childId];
+        $child=$repository->fetch($parameter);
+        if(isset($child)){
+            return $child->parent_id;
         }
     }
 

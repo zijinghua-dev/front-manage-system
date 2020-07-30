@@ -8,6 +8,7 @@ namespace Zijinghua\Zvoyager\Http\Controllers;
 use Illuminate\Http\Request;
 use Zijinghua\Zbasement\Http\Controllers\BaseController;
 use Zijinghua\Zbasement\Http\Requests\ClearRequest;
+use Zijinghua\Zbasement\Http\Requests\StoreRequest;
 
 
 class GroupController extends BaseController
@@ -29,7 +30,7 @@ class GroupController extends BaseController
     }
 
     //组的创建是特殊的，必须要有父组
-    public function store(Request $request){
+    public function store(StoreRequest $request){
         return $this->execute($request,'store');
     }
 }
