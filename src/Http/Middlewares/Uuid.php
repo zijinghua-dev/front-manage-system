@@ -32,60 +32,58 @@ class Uuid
             $id=$messageResponse->data[0]['value'];
         }
 
-
-        $id=$messageResponse->data;
         $data = $request->all();
         $service=Zsystem::service('parameter');
         $messageResponse=$service->replaceId($data,$id);
         if(!$messageResponse->code->status) {
-            return $messageResponse->response();//格式错误
+            return $messageResponse->response();//格式错误，没有携带可用的id
         }
         $request->replace($data);
-
-        if(isset($request['uuid'])){
-            $uuid=$request['uuid'];
-        }else{
-            if(!isset($request['id'])){
-
-
-            }
-
-            if(!isset($request['search'])){
-                return $next($request);
-            }
-            foreach ($request['search'] as $key=>$item){
-                if($item['field']=='uuid'){
-                    $uuid=$item['value'];
-                }
-            }
-        }
-        if(!isset($uuid)){
-            return $next($request);
-        }
-        $repository=Zsystem::repository('user');
-        $id=$repository->transferKey($uuid);//输出null，没有；输出false，出错了。
-
-        //如果是输入参数是数组，则遍历转换
-        //如果输入输出数据不一致，则退回报错
-        if(!emptyObjectOrArray($id)){
-            $data = $request->all();
-            if(count($id)==1){
-                $id=$id[0];
-            }
-            if(isset($data['search'])){
-                if($data['search']['field']=='uuid'){
-                    $data['search']['field']=='id';
-                    $data['search']['value']==$id;
-                }
-            }else{
-                if(isset($data['uuid'])) {
-                    unset($data['uuid']);
-                }
-                $data['id']=$id;
-            }
-            $request->replace($data);
-        }
-
         return $next($request);
+//        if(isset($request['uuid'])){
+//            $uuid=$request['uuid'];
+//        }else{
+//            if(!isset($request['id'])){
+//
+//
+//            }
+//
+//            if(!isset($request['search'])){
+//                return $next($request);
+//            }
+//            foreach ($request['search'] as $key=>$item){
+//                if($item['field']=='uuid'){
+//                    $uuid=$item['value'];
+//                }
+//            }
+//        }
+//        if(!isset($uuid)){
+//            return $next($request);
+//        }
+//        $repository=Zsystem::repository('user');
+//        $id=$repository->transferKey($uuid);//输出null，没有；输出false，出错了。
+//
+//        //如果是输入参数是数组，则遍历转换
+//        //如果输入输出数据不一致，则退回报错
+//        if(!emptyObjectOrArray($id)){
+//            $data = $request->all();
+//            if(count($id)==1){
+//                $id=$id[0];
+//            }
+//            if(isset($data['search'])){
+//                if($data['search']['field']=='uuid'){
+//                    $data['search']['field']=='id';
+//                    $data['search']['value']==$id;
+//                }
+//            }else{
+//                if(isset($data['uuid'])) {
+//                    unset($data['uuid']);
+//                }
+//                $data['id']=$id;
+//            }
+//            $request->replace($data);
+//        }
+
+//        return $next($request);
     }
 }

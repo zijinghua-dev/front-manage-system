@@ -4,6 +4,7 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zbasement\Http\Services\BaseService;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 
@@ -18,11 +19,56 @@ class ParameterService extends BaseService implements ParameterServiceInterface
             return $messageResponse;
         }else {
             if (!isset($request['id'])) {
-                $messageResponse = $this->messageResponse($slug, $action . '.validation.validation.failed');
+                $messageResponse = $this->messageResponse($slug, $action . '.validation.failed');
                 return $messageResponse;
             }
             $messageResponse = $this->messageResponse($slug, $action . '.validation.success', ['field' => 'id', 'value' => $request['id']]);
             return $messageResponse;
         }
+    }
+
+    public function replaceId($data,$id){
+        //首先调整格式，如果只有一个元素，就不用数组了
+        if(count($id)==1){
+            $id=$id[0];
+        }
+        //如果$data是搜索格式
+        if(isset($data['search'])){
+            if($data['search']['field']=='uuid'){
+                $data['search']['field']=='id';
+                $data['search']['value']==$id;
+            }
+        }
+        $data['id']=$id;
+        return $data;
+    }
+
+
+
+    public function setAbility($request){
+        $data = $request->all();
+        if(!isset($data['slug'])){
+            $data['slug']=getSlug($request);
+        }
+        if(!isset($data['datatypeId'])){
+            $repository=Zsystem::repository('datatype');
+            $data['datatypeId']=$repository->key($data['slug']);//slugId就是datatypeId
+        }
+        if(!isset($data['action'])){
+            list($class, $method) = explode('@', $request->route()->getActionName());
+            $data['action']=$method;
+        }
+        if(!isset($data['actionId'])){
+            $repository=Zsystem::repository('action');
+            $data['actionId']=$repository->key($data['action']);
+        }
+
+        //然后拿到组ID
+        //如果组ID为空，意味着用户要对自己创建的对象进行操作
+        //当前组,前端传入的是uuid
+        if(!isset($data['groupId'])){
+            $data['groupId']=null;
+        }
+        return $data;
     }
 }
