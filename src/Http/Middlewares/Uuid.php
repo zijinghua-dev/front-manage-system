@@ -11,11 +11,45 @@ class Uuid
 {
     public function handle($request, Closure $next)
     {
+        //输入参数里必须有ID，没有ID则必须有uuid，否则报错
+        $service=Zsystem::service('parameter');
+        $messageResponse=$service->hasId($request);
+        if(!$messageResponse->code->status){
+            //改成field=》，value=》格式
+            return $messageResponse->response();
+        }
+
         //把输入参数里的uuid转成datatypeId+ObjectId
+        //如果uuid不对，要报错，允许没有uuid，因为有id啊
+        if($messageResponse->data[0]['field']=='uuid'){
+            $service=Zsystem::service('user');
+            $messageResponse=$service->transferKey($request);
+            if(!$messageResponse->code->status){
+                return $messageResponse->response();
+            }
+            $id=$messageResponse->data[0];
+        }else{
+            $id=$messageResponse->data[0]['value'];
+        }
+
+
+        $id=$messageResponse->data;
+        $data = $request->all();
+        $service=Zsystem::service('parameter');
+        $messageResponse=$service->replaceId($data,$id);
+        if(!$messageResponse->code->status) {
+            return $messageResponse->response();//格式错误
+        }
+        $request->replace($data);
 
         if(isset($request['uuid'])){
             $uuid=$request['uuid'];
         }else{
+            if(!isset($request['id'])){
+
+
+            }
+
             if(!isset($request['search'])){
                 return $next($request);
             }

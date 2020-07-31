@@ -3,6 +3,7 @@ namespace Zijinghua\Zvoyager;
 
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
 //use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
+use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
 use Zijinghua\Zvoyager\Http\Middlewares\Uuid;
@@ -44,6 +45,7 @@ use Zijinghua\Zvoyager\Http\Services\AuthService;
 use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
 use Zijinghua\Zvoyager\Http\Services\GroupService;
+use Zijinghua\Zvoyager\Http\Services\ParameterService;
 use Zijinghua\Zvoyager\Http\Services\UserService;
 use Zijinghua\Zvoyager\Providers\AuthServiceProvider;
 use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
@@ -152,6 +154,11 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('groupObjectModel', GroupObjectModelInterface::class);
         $this->app->singleton('groupObjectModel', function () {
             return new GroupObject();
+        });
+
+        $loader->alias('parameterService', ParameterServiceInterface::class);
+        $this->app->singleton('parameterService', function () {
+            return new ParameterService();
         });
     }
     public function boot(Router $router, Dispatcher $event)
