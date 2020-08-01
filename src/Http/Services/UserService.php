@@ -125,4 +125,18 @@ class UserService extends BaseService implements UserServiceInterface
 
 
     }
+
+    public function transferKey($request){
+        $uuid=$request['uuid'];
+        $slug=$request['slug'];
+        $action=$request['action'];
+        $repository=Zsystem::repository('user');
+        $data=$repository->transferKey($uuid);
+        if(!emptyObjectOrArray($data)){
+            $messageResponse=$this->messageResponse($slug,$action.'.validation.failed');
+            return $messageResponse;
+        }
+        $messageResponse=$this->messageResponse($slug,$action.'.validation.success',$data);
+        return $messageResponse;
+    }
 }

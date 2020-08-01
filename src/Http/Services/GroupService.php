@@ -73,9 +73,9 @@ class GroupService extends BaseService implements GroupServiceInterface
         $parameter['search'][]=['field'=>'object_id','value'=>$parameters['objectId'],'filter'=>'=','algorithm'=>'and'];
         $objects=$repository->fetch($parameter);
         if(!isset($objects)){
-            $messageResponse=$this->messageResponse('group','search.failed');
+            $messageResponse=$this->messageResponse('group','search.submit.failed');
         }else{
-            $messageResponse=$this->messageResponse('group','search.success');
+            $messageResponse=$this->messageResponse('group','search.submit.success');
         }
         return $messageResponse;
     }
@@ -96,9 +96,9 @@ class GroupService extends BaseService implements GroupServiceInterface
         $parameter['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
         $datatype=$repository->fetch($parameter);
         if(!isset($datatype)){
-            $messageResponse=$this->messageResponse('group','search.failed');
+            $messageResponse=$this->messageResponse('group','search.submit.failed');
         }else{
-            $messageResponse=$this->messageResponse('group','search.success');
+            $messageResponse=$this->messageResponse('group','search.submit.success');
         }
         return $messageResponse;
     }

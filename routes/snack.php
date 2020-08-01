@@ -5,21 +5,21 @@
  * Date: 2020-01-17
  * Time: 11:33
  */
-Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',], function () {
-    Route::group(['prefix' => 'auth',], function () {
+Route::group(['middleware' => ['api','setRequestParameters','zUuid'],'prefix' => 'v1',], function () {
+    Route::group(['prefix' => 'auth','middleware' =>'zCheckExternalNames'], function () {
         Route::post('login', 'AuthController@login');
     });
     Route::group(['prefix' => 'user',], function () {
         Route::post('/', 'UserController@store');
     });
-//,'zAuthorize'
-    Route::group(['middleware'=>['auth:api']], function () {
+//
+    Route::group(['middleware'=>['auth:api','zAuthorize']], function () {
         Route::group(['prefix' => 'group'], function () {
             Route::post('/expand', 'GroupController@expand');//给组增加属性，允许它装载更多类型的对象
         });
     });
-    //,'zCheckGroup','zAuthorize'
-    Route::group(['middleware'=>['auth:api']], function () {
+    //,'zCheckGroup'
+    Route::group(['middleware'=>['auth:api','zAuthorize']], function () {
 
         Route::group(['prefix' => 'auth',], function () {
             Route::post('logout', 'AuthController@logout');
@@ -27,7 +27,7 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',],
 
 
 
-        Route::group(['middleware' => 'zUuid,zCheckExternalNames','prefix' => 'user'], function () {
+        Route::group(['middleware' => 'zCheckExternalNames','prefix' => 'user'], function () {
 
             Route::post('/index', 'UserController@index');
             Route::post('/fetch', 'UserController@fetch');

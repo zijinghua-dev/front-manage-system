@@ -16,7 +16,7 @@ class Authorize
     public function handle($request, Closure $next)
     {
         //获取用户角色，如果是第一组成员，执行一切动作
-        $service=Zsystem::service('group');
+        $service=Zsystem::service('authorize');
         $result=$service->inPlatformOwner(['userId'=>Auth::user()->id]);
         if($result){
             return $next($request);
@@ -28,8 +28,8 @@ class Authorize
             $groupId=$request['groupId'];
         }
         $objectId=null;
-        if(isset($request['objectId'])){
-            $objectId=$request['objectId'];
+        if(isset($request['id'])){
+            $objectId=$request['id'];
         }
         $actionId=null;
         if(isset($request['actionId'])){

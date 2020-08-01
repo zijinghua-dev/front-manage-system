@@ -115,17 +115,23 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             //查看该用户是第一组的owner还是成员
             $repository=Zsystem::repository('group');
             $group=$repository->get(0,1);
-            if($group->owner_id==$parameters['userId']){
+            if(!isset($group)){
+                return false;
+            }
+            if($group->count()==0){
+                return false;
+            }
+            if($group[0]->owner_id==$parameters['userId']){
                 return true;
             }
             //找出user的类型
             $repository=Zsystem::repository('datatype');
-            $userType=$repository->key('user');
+            $userTypeId=$repository->key('user');
             //查看是不是组成员
             $repository=Zsystem::repository('groupObject');
-            $search['search'][]=['field'=>'datatype_id','value'=>$userType->id,'filter'=>'=','algorithm'=>'and'];
+            $search['search'][]=['field'=>'datatype_id','value'=>$userTypeId,'filter'=>'=','algorithm'=>'and'];
             $search['search'][]=['field'=>'object_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'group_id','value'=>$group->id,'filter'=>'=','algorithm'=>'and'];
+            $search['search'][]=['field'=>'group_id','value'=>$group[0]->id,'filter'=>'=','algorithm'=>'and'];
             $result=$repository->fetch($search);
             if(isset($result)){
                 return true;

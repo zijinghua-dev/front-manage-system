@@ -17,14 +17,16 @@ class ParameterService extends BaseService implements ParameterServiceInterface
         $slug=$request['slug'];
         if(isset($request['uuid'])){
             $uuid=$request['uuid'];
-            $messageResponse=$this->messageResponse($slug,$action.'.validation.success', ['field'=>'uuid','value'=>$uuid]);
+            $data[]=['field'=>'uuid','value'=>$uuid];
+            $messageResponse=$this->messageResponse($slug,$action.'.validation.success',$data );
             return $messageResponse;
         }else {
             if (!isset($request['id'])) {
                 $messageResponse = $this->messageResponse($slug, $action . '.validation.failed');
                 return $messageResponse;
             }
-            $messageResponse = $this->messageResponse($slug, $action . '.validation.success', ['field' => 'id', 'value' => $request['id']]);
+            $data[]=['field' => 'id', 'value' => $request['id']];
+            $messageResponse = $this->messageResponse($slug, $action . '.validation.success', $data);
             return $messageResponse;
         }
     }

@@ -35,7 +35,7 @@ class ClientRestfulUserProvider implements UserProvider
     public function retrieveById($identifier)
     {
         $userService=Zsystem::service('user');
-        $parameters['search'][]=['field'=>'uuid','value'=>$identifier];
+        $parameters['search'][]=['field'=>'uuid','value'=>$identifier,'filter'=>'=','algorithm'=>'or'];
         $response = $userService->fetch($parameters);
         return $response->data;
     }
