@@ -13,7 +13,7 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',],
         Route::post('/', 'UserController@store');
     });
 //,'zAuthorize'
-    Route::group(['middleware'=>['auth:api','zCheckParent']], function () {
+    Route::group(['middleware'=>['auth:api']], function () {
         Route::group(['prefix' => 'group'], function () {
             Route::post('/expand', 'GroupController@expand');//给组增加属性，允许它装载更多类型的对象
         });
@@ -27,7 +27,7 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',],
 
 
 
-        Route::group(['middleware' => 'zUuid','prefix' => 'user'], function () {
+        Route::group(['middleware' => 'zUuid,zCheckExternalNames','prefix' => 'user'], function () {
 
             Route::post('/index', 'UserController@index');
             Route::post('/fetch', 'UserController@fetch');

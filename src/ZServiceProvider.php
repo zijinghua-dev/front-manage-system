@@ -4,6 +4,7 @@ namespace Zijinghua\Zvoyager;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
 //use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
+use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
 use Zijinghua\Zvoyager\Http\Middlewares\Uuid;
@@ -179,7 +180,7 @@ class ZServiceProvider extends BaseServiceProvider
         $router->aliasMiddleware('zCheckGroup', CheckGroup::class);
         $router->aliasMiddleware('zUuid', Uuid::class);
         $router->aliasMiddleware('zCheckParent', CheckParent::class);
-//        $router->aliasMiddleware('checkExternalNames', CheckExternalNames::class);
+        $router->aliasMiddleware('zCheckExternalNames', CheckExternalNames::class);
 
     }
 

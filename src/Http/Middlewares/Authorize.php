@@ -12,13 +12,13 @@ use Zijinghua\Zvoyager\Traits\Parameters;
 
 class Authorize
 {
-    use Parameters;
+//    use Parameters;
     public function handle($request, Closure $next)
     {
         //获取用户角色，如果是第一组成员，执行一切动作
         $service=Zsystem::service('group');
         $result=$service->inPlatformOwner(['userId'=>Auth::user()->id]);
-        if($result->code->status){
+        if($result){
             return $next($request);
         }
 

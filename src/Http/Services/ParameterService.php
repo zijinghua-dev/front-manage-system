@@ -4,6 +4,8 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+use Exception;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zbasement\Http\Services\BaseService;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
@@ -43,7 +45,21 @@ class ParameterService extends BaseService implements ParameterServiceInterface
         return $data;
     }
 
-
+    public function decryExternal($request){
+        $data = $request->all();
+        foreach ($data as $key=>$value) {
+            if (in_array($key, getConfigValue('zbasement.fields.auth.external'))) {
+                try {
+//                    $key = encrypt( $data[$key] );
+                    $data[$key] = decrypt($data[$key]);
+                } catch (DecryptException $e) {
+                    //这里应该再包装异常，放进response格式
+                    throw new Exception('wechatid不正确');
+                }
+            }
+        }
+        return $data;
+    }
 
     public function setAbility($request){
         $data = $request->all();
