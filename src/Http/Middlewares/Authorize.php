@@ -17,9 +17,15 @@ class Authorize
     {
         //获取用户角色，如果是第一组成员，执行一切动作
         $service=Zsystem::service('authorize');
-        $result=$service->inPlatformOwner(['userId'=>Auth::user()->id]);
-        if($result){
+        $messageResponse=$service->inPlatformOwner(['userId'=>Auth::user()->id]);
+        if($messageResponse->code->status){
             return $next($request);
+        }else{
+            //如果参数错误，则中断进程
+            //如果没有不是平台owner，还可以尝试其他授权可能
+            if($messageResponse->getValidationResult()===false) {
+                return $messageResponse->response();
+            }
         }
 
         //参数准备

@@ -38,10 +38,13 @@ class ParameterService extends BaseService implements ParameterServiceInterface
         }
         //如果$data是搜索格式
         if(isset($data['search'])){
-            if($data['search']['field']=='uuid'){
-                $data['search']['field']=='id';
-                $data['search']['value']==$id;
+            foreach ($data['search'] as $key=>$item){
+                if($data['search'][$key]['field']=='uuid'){
+                    $data['search'][$key]['field']='id';
+                    $data['search'][$key]['value']=$id;
+                }
             }
+
         }
         $data['id']=$id;
         return $data;

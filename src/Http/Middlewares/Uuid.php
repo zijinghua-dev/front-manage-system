@@ -34,10 +34,10 @@ class Uuid
 
         $data = $request->all();
         $service=Zsystem::service('parameter');
-        $messageResponse=$service->replaceId($data,$id);
-        if(!$messageResponse->code->status) {
-            return $messageResponse->response();//格式错误，没有携带可用的id
-        }
+        $data=$service->replaceId($data,$id);
+//        if(!$messageResponse->code->status) {
+//            return $messageResponse->response();//格式错误，没有携带可用的id
+//        }
         $request->replace($data);
         return $next($request);
 //        if(isset($request['uuid'])){

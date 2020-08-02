@@ -2,23 +2,29 @@
 return [
 
         'login' => [
-            'success' => [
-                'http_code' => 200,
-                'code' => 'ZBASEMENT_CODE_AUTH_LOGIN_SUCCESS',
-                'status' => true,
-                'message' => '登录成功!'
+            'submit'=>[
+                'success' => [
+                    'http_code' => 200,
+                    'code' => 'ZBASEMENT_CODE_AUTH_LOGIN_SUBMIT_SUCCESS',
+                    'status' => true,
+                    'message' => '登录成功!'
+                ],
+                'failed' => [
+                    'http_code' => 401,
+                    'code' => 'ZBASEMENT_CODE_AUTH_LOGIN_SUBMIT_FAILED',
+                    'status' => false,
+                    'message' => '登录失败!'
+                ],
             ],
-            'failed' => [
-                'http_code' => 401,
-                'code' => 'ZBASEMENT_CODE_AUTH_LOGIN_FAILED',
-                'status' => false,
-                'message' => '登录失败!'
-            ],
+
             'validation' => [
-                'http_code' => 422,
-                'code' => 'ZBASEMENT_CODE_AUTH_LOGIN_VALIDATION',
-                'status' => false,
-                'message' => '登录参数验证失败!'
+                'failed'=>[
+                    'http_code' => 422,
+                    'code' => 'ZBASEMENT_CODE_AUTH_LOGIN_VALIDATION_FAILED',
+                    'status' => false,
+                    'message' => '登录参数验证失败!'
+                ],
+
             ],
             'load'=>[
                 'rules'=>[

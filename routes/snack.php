@@ -5,10 +5,13 @@
  * Date: 2020-01-17
  * Time: 11:33
  */
-Route::group(['middleware' => ['api','setRequestParameters','zUuid'],'prefix' => 'v1',], function () {
-    Route::group(['prefix' => 'auth','middleware' =>'zCheckExternalNames'], function () {
+Route::group(['middleware' => ['api','zCheckExternalNames'],'prefix' => 'v1',], function () {
+    Route::group(['prefix' => 'auth'], function () {
         Route::post('login', 'AuthController@login');
     });
+});
+Route::group(['middleware' => ['api','setRequestParameters','zUuid'],'prefix' => 'v1',], function () {
+
     Route::group(['prefix' => 'user',], function () {
         Route::post('/', 'UserController@store');
     });
