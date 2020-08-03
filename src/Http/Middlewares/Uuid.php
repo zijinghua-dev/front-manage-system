@@ -32,6 +32,9 @@ class Uuid
             $id=$messageResponse->data[0]['value'];
         }
 
+        if(is_array($id)){
+            $id=array_unique($id);
+        }
         $data = $request->all();
         $service=Zsystem::service('parameter');
         $data=$service->replaceId($data,$id);
