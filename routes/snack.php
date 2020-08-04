@@ -55,6 +55,7 @@ Route::group(['middleware' => ['api','setRequestParameters','zUuid'],'prefix' =>
             Route::post('/append', 'GroupController@append');//向组内添加对象，可以传array
             Route::post('/clear', 'GroupController@clear');//从组内移除对象，并不删除，可以传array
             Route::post('/shrink', 'GroupController@shrink');//减少组的属性，不允许它装载某个类型的对象
+            Route::post('/share', 'GroupController@share');//减少组的属性，不允许它装载某个类型的对象
         });
 
         Route::group(['prefix' => 'datatype'], function () {

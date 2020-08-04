@@ -90,6 +90,44 @@ class ParameterService extends BaseService implements ParameterServiceInterface
         if(!isset($data['groupId'])){
             $data['groupId']=null;
         }
+
+        //输入destinationGroupId,destinationUserUuid,destinationUserUuid需要转换成id
+        //输入$actionId要转换为
+        $ternaryOperation=$this->ternaryOperation($data['actionId']);
+        if($ternaryOperation){
+            $data['destinationActionId']=$ternaryOperation;
+        }
+        if(isset($data['destinationUserUuid'])){
+
+                $repository=Zsystem::repository('user');
+                $result=$repository->transferKey(['uuid'=>$data['destinationUserUuid']]);
+            $data['destinationUserId']=$result;
+        }
+
         return $data;
+    }
+
+    public function ternaryOperation($actionId){
+        //转换三元操作的类型
+        $repository=Zsystem::repository('action');
+        $search['search'][]=['field'=>'id','value'=>$actionId,'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'ternary','value'=>1,'filter'=>'=','algorithm'=>'and'];
+        $result=$repository->fetch($search);
+        if(!isset($result)){
+            return false;
+        }
+        return $result->ternary_id;
+    }
+
+    public function destinationAction(){
+
+    }
+
+    public function destinationGroup(){
+
+    }
+
+    public function destinationUser(){
+
     }
 }

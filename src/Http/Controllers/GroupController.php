@@ -33,4 +33,8 @@ class GroupController extends BaseController
     public function store(StoreRequest $request){
         return $this->execute($request,'store');
     }
+
+    public function share(Request $request){
+        return $this->execute($request,'share');
+    }
 }

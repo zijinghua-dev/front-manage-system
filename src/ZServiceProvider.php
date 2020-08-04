@@ -1,16 +1,23 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
+use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
 //use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
+use Zijinghua\Zvoyager\Http\Contracts\GuopModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\GurModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\ObjectActionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
 use Zijinghua\Zvoyager\Http\Middlewares\Uuid;
 use Zijinghua\Zvoyager\Http\Models\GroupObject;
-use Zijinghua\Zvoyager\Http\Models\GroupObjectPermission;
+use Zijinghua\Zvoyager\Http\Models\GroupParent;
+use Zijinghua\Zvoyager\Http\Models\GroupUserRole;
+use Zijinghua\Zvoyager\Http\Models\ObjectAction;
 use Zijinghua\Zvoyager\Http\Models\GroupRolePermission;
+use Zijinghua\Zvoyager\Http\Models\GroupUserObjectPermission;
 use Zijinghua\Zvoyager\Http\Repositories\ActionRepository;
 use Zijinghua\Zbasement\Http\Repositories\Contracts\UserRepositoryInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ActionRepositoryInterface;
@@ -147,9 +154,9 @@ class ZServiceProvider extends BaseServiceProvider
             return new GroupRolePermission();
         });
 
-        $loader->alias('groupObjectPermissionModel', GroupObjectPermissionModelInterface::class);
-        $this->app->singleton('groupObjectPermissionModel', function () {
-            return new GroupObjectPermission();
+        $loader->alias('objectActionModel', ObjectActionModelInterface::class);
+        $this->app->singleton('objectActionModel', function () {
+            return new ObjectAction();
         });
 
         $loader->alias('groupObjectModel', GroupObjectModelInterface::class);
@@ -160,6 +167,21 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('parameterService', ParameterServiceInterface::class);
         $this->app->singleton('parameterService', function () {
             return new ParameterService();
+        });
+
+        $loader->alias('guopModel', GuopModelInterface::class);
+        $this->app->singleton('guopModel', function () {
+            return new GroupUserObjectPermission();
+        });
+
+        $loader->alias('groupParentModel', GroupParentModelInterface::class);
+        $this->app->singleton('groupParentModel', function () {
+            return new GroupParent();
+        });
+
+        $loader->alias('groupUserRoleModel', GurModelInterface::class);
+        $this->app->singleton('groupUserRoleModel', function () {
+            return new GroupUserRole();
         });
     }
     public function boot(Router $router, Dispatcher $event)

@@ -23,26 +23,28 @@ class Authorize
 //        $repository=Zsystem::repository('datatype');
 //        $userTypeId=$repository->key('user');
         $service=Zsystem::service('authorize');
-        $messageResponse=$service->getPlatformOwnerGroup();
+        $messageResponse=$service->getPlatformOwnerGroup($data['slug']);
         if(!$messageResponse->code->status){
             if($messageResponse->getValidationResult()===false) {
                 return $messageResponse->response();//参数出错
             }
         }
         $platformOwnerGroup=$messageResponse->data[0];
-        $result=$service->inGroup(['slug'=>$data['slug'],'datatypeSlug'=>'user','id'=>$data['userId'],'groupId'=>$platformOwnerGroup->id]);
+        $result=$service->inGroup(['slug'=>$data['slug'],'datatypeId'=>$data['datatypeId'],'datatypeSlug'=>'user',
+            'id'=>$data['userId'],'groupId'=>$platformOwnerGroup->id]);
         if($result){
             return $next($request);
         }
 
-        $messageResponse=$service->getPlatformAdminGroup();
+        $messageResponse=$service->getPlatformAdminGroup($data['slug']);
         if(!$messageResponse->code->status){
             if($messageResponse->getValidationResult()===false) {
                 return $messageResponse->response();//参数出错
             }
         }
         $platformAdminGroup=$messageResponse->data[0];
-        $result=$service->inGroup(['slug'=>$data['slug'],'datatypeSlug'=>'user','id'=>$data['userId'],'groupId'=>$platformAdminGroup->id]);
+        $result=$service->inGroup(['slug'=>$data['slug'],'datatypeSlug'=>'user','id'=>$data['userId'],
+            'datatypeId'=>$data['datatypeId'],'groupId'=>$platformAdminGroup->id]);
         if($result){
             $messageResponse=$service->shouldInGroupFamily(['slug'=>$data['slug'],'id'=>$data['id'],'groupId'=>$platformOwnerGroup->id]);
             if($messageResponse->code->status){
@@ -57,7 +59,7 @@ class Authorize
         }
 
         //不是平台admin成员，就要通过查权限表来确定是否能操作
-        $messageResponse=$service->checkNotPlatformPermission($data);
+        $messageResponse=$service->checkNoAdminPermission($data);
         if(!$messageResponse->code->status){
                 return $messageResponse->response();
         }

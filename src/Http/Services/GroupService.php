@@ -7,6 +7,7 @@ namespace Zijinghua\Zvoyager\Http\Services;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
 use Zijinghua\Zbasement\Facades\Zsystem;
+use Zijinghua\Zbasement\Http\Requests\StoreRequest;
 use Zijinghua\Zbasement\Http\Responses\MessageResponse;
 use Zijinghua\Zbasement\Http\Services\BaseService;
 use Zijinghua\Zvoyager\Http\Contracts\GroupServiceInterface;
@@ -148,6 +149,19 @@ class GroupService extends BaseService implements GroupServiceInterface
             $messageResponse=$this->messageResponse($this->getSlug(),'shrink.submit.success');
         }else{
             $messageResponse=$this->messageResponse($this->getSlug(),'shrink.submit.failed');
+        }
+
+        return $messageResponse;
+    }
+
+    //这是一个三元操作
+    public function share($parameters){
+        $repository=$this->repository($this->getSlug());
+        $result=$repository->share($parameters);
+        if(isset($result)){
+            $messageResponse=$this->messageResponse($this->getSlug(),'share.submit.success');
+        }else{
+            $messageResponse=$this->messageResponse($this->getSlug(),'share.submit.failed');
         }
 
         return $messageResponse;

@@ -18,7 +18,7 @@ class Group extends BaseModel implements GroupModelInterface
     }
 
     public function objectPermission(){
-        return $this->hasMany('Zijinghua\Zvoyager\Http\Models\GroupObjectPermission','group_id');
+        return $this->hasMany('Zijinghua\Zvoyager\Http\Models\ObjectAction','group_id');
     }
 
     public function object(){

@@ -4,7 +4,7 @@
 namespace Zijinghua\Zvoyager\Http\Contracts;
 
 
-interface GroupObjectPermissionModelInterface
+interface GurModelInterface
 {
 
 }
