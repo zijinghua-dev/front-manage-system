@@ -101,6 +101,9 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         if(!isset($result)){
             return false;//该用户不是admin组成员
         }
+        if(!$result){
+            return false;//该用户不是admin组成员
+        }
         //现在排除操作对象是否是平台owner组的
         $ownerGroup=$this->getPlatformOwnerGroup();
         if(!isset($ownerGroup)){
@@ -118,7 +121,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         //该用户是否通过子组拥有该对象
         //首先获取该对象，拿到owner和owner组
         $repository=Zsystem::repository($datatypeSlug);
-        $search['search']=['field'=>'id','value'=>$objectId,"filter"=>"=",'algorithm'=>'and'];
+        $search['search'][]=['field'=>'id','value'=>$objectId,"filter"=>"=",'algorithm'=>'and'];
         $object=$repository->fetch($search);
         if(!isset($object)){
             return;
@@ -302,6 +305,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             return $messageResponse;
         }catch (\Exception $e){
             //只捕捉各种参数出错的异常
+            //数据库模型丢失异常
         }
 
     }
@@ -613,16 +617,16 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'action_id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->fetch($search);
-        if(isset($parameters['destinationGroupId'])){
-            unset($search);
-            $search['search'][]=['field'=>'group_id','value'=>$parameters['destinationGroupId'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'action_id','value'=>$parameters['destinationActionId'],'filter'=>'=','algorithm'=>'and'];
-            $result=$repository->fetch($search);
-            return $result;
-        }
+//        if(isset($parameters['destinationGroupId'])){
+//            unset($search);
+//            $search['search'][]=['field'=>'group_id','value'=>$parameters['destinationGroupId'],'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'action_id','value'=>$parameters['destinationActionId'],'filter'=>'=','algorithm'=>'and'];
+//            $result=$repository->fetch($search);
+//            return $result;
+//        }
         return $result;
     }
 

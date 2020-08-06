@@ -10,7 +10,7 @@ Route::group(['middleware' => ['api','zCheckExternalNames'],'prefix' => 'v1',], 
         Route::post('login', 'AuthController@login');
     });
 });
-Route::group(['middleware' => ['api','setRequestParameters','zUuid'],'prefix' => 'v1',], function () {
+Route::group(['middleware' => ['api','setRequestParameters'],'prefix' => 'v1',], function () {
 
     Route::group(['prefix' => 'user',], function () {
         Route::post('/', 'UserController@store');
@@ -34,7 +34,7 @@ Route::group(['middleware' => ['api','setRequestParameters','zUuid'],'prefix' =>
 
             Route::post('/index', 'UserController@index');
             Route::post('/fetch', 'UserController@fetch');
-            Route::get('/{uuid}', 'UserController@show');
+            Route::get('/{id}', 'UserController@show');
             Route::put('/', 'UserController@update');
             Route::post('/search', 'UserController@search');
             Route::put('/updatepassword', 'UserController@updatePassword');

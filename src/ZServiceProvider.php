@@ -1,6 +1,7 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
+use Zijinghua\Zvoyager\Http\Contracts\GroupFamilyModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
 //use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
@@ -12,6 +13,7 @@ use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
 use Zijinghua\Zvoyager\Http\Middlewares\Uuid;
+use Zijinghua\Zvoyager\Http\Models\GroupFamily;
 use Zijinghua\Zvoyager\Http\Models\GroupObject;
 use Zijinghua\Zvoyager\Http\Models\GroupParent;
 use Zijinghua\Zvoyager\Http\Models\GroupUserRole;
@@ -182,6 +184,12 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('groupUserRoleModel', GurModelInterface::class);
         $this->app->singleton('groupUserRoleModel', function () {
             return new GroupUserRole();
+        });
+
+
+        $loader->alias('groupFamilyModel', GroupFamilyModelInterface::class);
+        $this->app->singleton('groupFamilyModel', function () {
+            return new GroupFamily();
         });
     }
     public function boot(Router $router, Dispatcher $event)
