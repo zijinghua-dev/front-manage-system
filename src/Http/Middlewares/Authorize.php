@@ -20,48 +20,10 @@ class Authorize
         $data['userId']=Auth::user()->id;
         $request->replace($data);
         //用户如果是第一组成员，或者是第一组owner，执行一切动作
-//        $repository=Zsystem::repository('datatype');
-//        $userTypeId=$repository->key('user');
         $service=Zsystem::service('authorize');
-        $messageResponse=$service->getPlatformOwnerGroup($data['slug']);
+        $messageResponse=$service->checkPermission($data);
         if(!$messageResponse->code->status){
-            if($messageResponse->getValidationResult()===false) {
-                return $messageResponse->response();//参数出错
-            }
-        }
-        $platformOwnerGroup=$messageResponse->data[0];
-        $result=$service->inGroup(['slug'=>$data['slug'],'datatypeId'=>$data['datatypeId'],'datatypeSlug'=>'user',
-            'id'=>$data['userId'],'groupId'=>$platformOwnerGroup->id]);
-        if($result){
-            return $next($request);
-        }
-
-        $messageResponse=$service->getPlatformAdminGroup($data['slug']);
-        if(!$messageResponse->code->status){
-            if($messageResponse->getValidationResult()===false) {
-                return $messageResponse->response();//参数出错
-            }
-        }
-        $platformAdminGroup=$messageResponse->data[0];
-        $result=$service->inGroup(['slug'=>$data['slug'],'datatypeSlug'=>'user','id'=>$data['userId'],
-            'datatypeId'=>$data['datatypeId'],'groupId'=>$platformAdminGroup->id]);
-        if($result){
-            $messageResponse=$service->shouldInGroupFamily(['slug'=>$data['slug'],'id'=>$data['id'],'groupId'=>$platformOwnerGroup->id]);
-            if($messageResponse->code->status){
-                return $messageResponse->response();//如果在第一组，那么就不能操作
-            }else{
-                //如果是参数错误，主要是groupId出错，则要中断进程
-                if($messageResponse->getValidationResult()===false) {
-                    return $messageResponse->response();
-                }
-            }
-            return $next($request);//不在第一组，可以操作
-        }
-
-        //不是平台admin成员，就要通过查权限表来确定是否能操作
-        $messageResponse=$service->checkNoAdminPermission($data);
-        if(!$messageResponse->code->status){
-                return $messageResponse->response();
+                return $messageResponse->response();//权限不足和参数出错
         }
         return $next($request);
 
