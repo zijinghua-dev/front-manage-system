@@ -578,7 +578,15 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $search['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
         if($result->count()>0){
-            $roleIdSet=$result->pluck('role_id')->toArray();
+            $roleSet=[];
+            //同时剔除已经时间无效的角色
+            foreach ($result as $key=>$item){
+                if((($item->schedule_begin==null)&&($item->schedule_end==null))||($item->schedule_begin<time()&&$item->schedule_end>time())){
+                    $roleSet[]=$item->id;
+                }
+
+            }
+//            $roleIdSet=$result->pluck('role_id')->toArray();
         }else{
             return null;
         }
@@ -586,8 +594,8 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         //这些角色有哪些权限
         $repository=Zsystem::repository('groupRolePermission');
         unset($search);
-        $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
-        $search['search'][]=['field'=>'role_id','value'=>$roleIdSet,'filter'=>'in','algorithm'=>'and'];
+//        $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
+        $search['search'][]=['field'=>'gur_id','value'=>$roleSet,'filter'=>'in','algorithm'=>'and'];
         $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'action_id','value'=>$actionId,'filter'=>'=','algorithm'=>'and'];
         $result=$repository->fetch($search);//源组的操作权限全部取出来了
@@ -617,6 +625,17 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'action_id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->fetch($search);
+        if(isset($result)){
+            //检查时间有效性
+            $scheduleBegin=$result->schedule_begin;
+            $scheduleEnd=$result->schedule_end;
+            if($scheduleBegin==null&&$scheduleEnd==null){
+                return true;
+            }
+            if($scheduleBegin<time()&&$scheduleEnd>time()){
+                return true;
+            }
+        }
 //        if(isset($parameters['destinationGroupId'])){
 //            unset($search);
 //            $search['search'][]=['field'=>'group_id','value'=>$parameters['destinationGroupId'],'filter'=>'=','algorithm'=>'and'];
@@ -627,7 +646,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
 //            $result=$repository->fetch($search);
 //            return $result;
 //        }
-        return $result;
+        return false;
     }
 
     public function groupHasDatatype($parameters){
