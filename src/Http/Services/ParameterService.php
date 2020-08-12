@@ -68,6 +68,10 @@ class ParameterService extends BaseService implements ParameterServiceInterface
 
     public function setAbility($request){
         $data = $request->all();
+        if(isset($request->id)){
+            $data['id']=$request->id;
+        }
+
         if(!isset($data['slug'])){
             $data['slug']=getSlug($request);
         }
