@@ -60,14 +60,7 @@ class GroupRepository extends BaseRepository implements GroupRepositoryInterface
         $model=Zsystem::model('groupDatatype');
 
     }
-    public function destroy($parameters){
-        //单一删除
-        $parameters=$this->getIndexParameter($parameters);
 
-        $model=$this->find($parameters);
-        return $this->softDelete($model);
-
-    }
 
 
     public function expand($parameters){
