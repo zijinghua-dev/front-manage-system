@@ -72,7 +72,11 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' =>$version
 //            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
         });
     });
-
+//baseservice对某个对象的删除\移除出群\
+//对某个对象添加操作方法，移除操作方法，
+    //某个用户获得某个对象的操作权限
+    //某个用户获得角色
+    //某个角色获得权限
 
 });
 //use TCG\Voyager\Models\Datatype;
