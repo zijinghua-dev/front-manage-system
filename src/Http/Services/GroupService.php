@@ -12,7 +12,7 @@ use Zijinghua\Zbasement\Http\Responses\MessageResponse;
 use Zijinghua\Zbasement\Http\Services\BaseService;
 use Zijinghua\Zvoyager\Http\Contracts\GroupServiceInterface;
 
-class GroupService extends BaseService implements GroupServiceInterface
+class GroupService extends BaseGroupService implements GroupServiceInterface
 {
     private $datatypeId;//group本身也是一种datatype，这个ID
     public function __construct()
@@ -166,4 +166,6 @@ class GroupService extends BaseService implements GroupServiceInterface
 
         return $messageResponse;
     }
+
+
 }

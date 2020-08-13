@@ -17,8 +17,8 @@ class Authorize
     {
         //把userId写入request
         $data=$request->all();
-        $data['userId']=Auth::user()->id;
-        $request->replace($data);
+//        $data['userId']=Auth::user()->id;
+//        $request->replace($data);
         //用户如果是第一组成员，或者是第一组owner，执行一切动作
         $service=Zsystem::service('authorize');
         $messageResponse=$service->checkPermission($data);

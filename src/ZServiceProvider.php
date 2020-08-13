@@ -1,6 +1,7 @@
 <?php
 namespace Zijinghua\Zvoyager;
 
+
 use Zijinghua\Zvoyager\Http\Contracts\GroupFamilyModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
@@ -12,7 +13,9 @@ use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
+use Zijinghua\Zvoyager\Http\Middlewares\SetUserId;
 use Zijinghua\Zvoyager\Http\Middlewares\Uuid;
+
 use Zijinghua\Zvoyager\Http\Models\GroupFamily;
 use Zijinghua\Zvoyager\Http\Models\GroupObject;
 use Zijinghua\Zvoyager\Http\Models\GroupParent;
@@ -54,6 +57,7 @@ use Zijinghua\Zvoyager\Http\Services\AuthorizeService;
 use Zijinghua\Zvoyager\Http\Services\AuthService;
 use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
+
 use Zijinghua\Zvoyager\Http\Services\GroupService;
 use Zijinghua\Zvoyager\Http\Services\ParameterService;
 use Zijinghua\Zvoyager\Http\Services\UserService;
@@ -186,11 +190,12 @@ class ZServiceProvider extends BaseServiceProvider
             return new GroupUserRole();
         });
 
-
         $loader->alias('groupFamilyModel', GroupFamilyModelInterface::class);
         $this->app->singleton('groupFamilyModel', function () {
             return new GroupFamily();
         });
+
+
     }
     public function boot(Router $router, Dispatcher $event)
     {
@@ -207,9 +212,9 @@ class ZServiceProvider extends BaseServiceProvider
     protected function registerMiddleware(Router $router){
         $router->aliasMiddleware('setRequestParameters', SetRequestParameters::class);
         $router->aliasMiddleware('zAuthorize', Authorize::class);
-        $router->aliasMiddleware('zCheckGroup', CheckGroup::class);
-        $router->aliasMiddleware('zUuid', Uuid::class);
-        $router->aliasMiddleware('zCheckParent', CheckParent::class);
+        $router->aliasMiddleware('zUserId', SetUserId::class);
+//        $router->aliasMiddleware('zUuid', Uuid::class);
+//        $router->aliasMiddleware('zCheckParent', CheckParent::class);
         $router->aliasMiddleware('zCheckExternalNames', CheckExternalNames::class);
 
     }

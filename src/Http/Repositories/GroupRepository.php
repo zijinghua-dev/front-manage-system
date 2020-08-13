@@ -114,34 +114,5 @@ class GroupRepository extends BaseRepository implements GroupRepositoryInterface
             DB::rollback();
             throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
         }
-//        $model=$this->model('groupDatatype');
-//        $where['group_id'] = $parameters['groupId'];
-//
-//        if(is_array($parameters['datatypeId'])){
-//            $id=$parameters['datatypeId'];
-//            $where[] = [function($query) use ($id){
-//                $query->whereIn('datatype_id', $id);
-//            }];
-//        }else{
-//            $where['datatype_id']=$parameters['datatypeId'];
-//        }
-//        $model = $model::where($where);
-
-//        try {
-//
-//            $repository=Zsystem::repository(groupDatatype);
-//            $repository->remove($parameters);
-//
-//        } catch (QueryException $e) {
-//            $errorCode = $e->errorInfo[1];
-//            if($errorCode == 1062){
-//                return;
-//            }else{
-//                throw $e;
-//            }
-//        }
-
-        //这里会有数据库唯一索引冲突报错
-
     }
 }

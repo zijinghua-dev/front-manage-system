@@ -16,20 +16,26 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' =>$version
     Route::group(['prefix' => 'user',], function () {
         Route::post('/', 'UserController@store');
     });
-//
-    Route::group(['middleware'=>['auth:api','zAuthorize']], function () {
+
+
+
+    Route::group(['middleware'=>['auth:api','zUserId']], function () {
         Route::group(['prefix' => 'group'], function () {
-            Route::post('/expand', 'GroupController@expand');//给组增加属性，允许它装载更多类型的对象
+//            Route::post('/', 'GroupController@store');
+            Route::post('/mine', 'GroupController@mine');
+        });
+
+        Route::group(['prefix' => 'campaign',], function () {
+            Route::post('run', 'CampaignController@run');
         });
     });
+
     //,'zCheckGroup'
-    Route::group(['middleware'=>['auth:api','zAuthorize']], function () {
+    Route::group(['middleware'=>['auth:api','zUserId','zAuthorize']], function () {
 
         Route::group(['prefix' => 'auth',], function () {
             Route::post('logout', 'AuthController@logout');
         });
-
-
 
         Route::group(['middleware' => 'zCheckExternalNames','prefix' => 'user'], function () {
 
@@ -58,6 +64,7 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' =>$version
             Route::post('/clear', 'GroupController@clear');//从组内移除对象，并不删除，可以传array
             Route::post('/shrink', 'GroupController@shrink');//减少组的属性，不允许它装载某个类型的对象
             Route::post('/share', 'GroupController@share');//减少组的属性，不允许它装载某个类型的对象
+            Route::post('/expand', 'GroupController@expand');//给组增加属性，允许它装载更多类型的对象
         });
 
         Route::group(['prefix' => 'datatype'], function () {

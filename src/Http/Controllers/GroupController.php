@@ -11,7 +11,7 @@ use Zijinghua\Zbasement\Http\Requests\ClearRequest;
 use Zijinghua\Zbasement\Http\Requests\StoreRequest;
 
 
-class GroupController extends BaseController
+class GroupController extends BaseGroupController
 {
     //从组内移除，并不删除
     public function clear(ClearRequest $request){
@@ -37,4 +37,6 @@ class GroupController extends BaseController
     public function share(Request $request){
         return $this->execute($request,'share');
     }
+
+
 }
