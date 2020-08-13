@@ -4,6 +4,8 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+use Illuminate\Support\Facades\DB;
+use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zbasement\Http\Services\BaseService;
 
 class BaseGroupService extends BaseService
@@ -81,4 +83,38 @@ class BaseGroupService extends BaseService
         return $messageResponse;
     }
 
+    public function clear($parameters){
+        //组内移除，并不删除
+        //必须通过group_objects model来做
+        //通过事务，删除关联记录
+        //组内移除需要将uuid变成 object_id，
+        $groupId=$parameters['groupId'];
+        $id=$parameters['id'];
+
+        DB::beginTransaction();
+        try {
+            //删除group_object,group_user_object_permissions,object_abilities
+            $repository=$this->repository('groupObject');
+            $parameters= ['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
+            $parameters= ['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
+            $parameters= ['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
+            $repository->delete($parameters);
+
+            //删除group_object_permission
+            $repository=$this->repository('guop');
+            $repository->delete($parameters);
+
+            //删除group_role_permissions
+            $repository=$this->repository('objectAction');
+            $repository->delete($parameters);
+
+
+
+            DB::commit();
+            return true;
+        } catch (Exception $e) {
+            DB::rollback();
+            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
+        }
+    }
 }
