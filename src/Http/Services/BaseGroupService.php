@@ -83,7 +83,8 @@ class BaseGroupService extends BaseService
         return $messageResponse;
     }
 
-    public function clear($parameters){
+    //clear和delete的调用，外包事务，返回response，不要直接调用
+    protected function clear($parameters){
         //组内移除，并不删除
         //必须通过group_objects model来做
         //通过事务，删除关联记录
@@ -91,8 +92,8 @@ class BaseGroupService extends BaseService
         $groupId=$parameters['groupId'];
         $id=$parameters['id'];
 
-        DB::beginTransaction();
-        try {
+//        DB::beginTransaction();
+//        try {
             //删除group_object,group_user_object_permissions,object_abilities
             $repository=$this->repository('groupObject');
             $parameters= ['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
@@ -110,11 +111,37 @@ class BaseGroupService extends BaseService
 
 
 
-            DB::commit();
-            return true;
-        } catch (Exception $e) {
-            DB::rollback();
-            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
-        }
+//            DB::commit();
+//            return true;
+//        } catch (Exception $e) {
+//            DB::rollback();
+//            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
+//        }
+    }
+
+    //删除本身记录，并同时删除关联数据
+    protected function remove($parameters){
+        //除了删除当前对象，还要把关联权限全部删除
+        //批量删除
+        $repository=$this->repository($this->getSlug());
+        $num=$repository->destroy(['id'=>$parameters['id']]);
+        //删除关联表
+        $data['datatype_id']=$parameters['datatypeId'];
+        $data['object_id']=$parameters['id'];
+        ////删除group_object
+        $repository=Zsystem::repository('groupObject');
+        $num=$num+$repository->destroy($data);
+        //删除group_object_permission
+        $repository=Zsystem::repository('guop');
+        $num=$num+$repository->destroy($data);
+        //删除group_role_permissions
+        $repository=Zsystem::repository('objectAction');
+        $num=$num+$repository->destroy($data);
+        //删除group_user_permissions
+        $repository=Zsystem::repository('userObject');
+        $num=$num+$repository->destroy($data);
+        //调用者如果是用户的话，还要删除所有自己own的对象
+        //调用者如果是组的话，还要删除所有自己own的对象；凡是不能被关联删除的表，应当注明，并自行维护关联数据，在关联表数据被删除后，还能保持自身不出错
+        return $num;
     }
 }
