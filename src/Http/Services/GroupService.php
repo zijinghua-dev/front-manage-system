@@ -104,6 +104,7 @@ class GroupService extends BaseGroupService implements GroupServiceInterface
         return $messageResponse;
     }
 
+    //对象添加到组内：groupObject内增加，
     public function append($parameters){
         $num=0;
         $group_id=$parameters['groupId'];
