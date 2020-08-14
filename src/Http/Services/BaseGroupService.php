@@ -34,7 +34,7 @@ class BaseGroupService extends BaseService
         $search['search'][]=['field'=>'owner_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
         if($result->count()>0){
-            $ids=array_merge($ids,$result->pluck('object_id')->toArray());
+            $ids=array_merge($ids,$result->pluck('id')->toArray());
         }
 
         //最后看这个用户在哪些组里有角色
@@ -66,8 +66,8 @@ class BaseGroupService extends BaseService
         $result=$repository->index($search);
         if($result->count()>0){
             $objectIds=$result->pluck('object_id')->toArray();
+            $ids= array_merge($ids,$objectIds);
         }
-        $ids= array_merge($ids,$objectIds);
 
         if(emptyObjectOrArray($ids)){
             $messageResponse=$this->messageResponse($this->getSlug(),'mine.submit.failed');
