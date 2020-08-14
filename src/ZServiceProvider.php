@@ -10,6 +10,7 @@ use Zijinghua\Zvoyager\Http\Contracts\GuopModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GurModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ObjectActionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
+use Zijinghua\Zvoyager\Http\Contracts\RoleModelInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
@@ -23,6 +24,7 @@ use Zijinghua\Zvoyager\Http\Models\GroupUserRole;
 use Zijinghua\Zvoyager\Http\Models\ObjectAction;
 use Zijinghua\Zvoyager\Http\Models\GroupRolePermission;
 use Zijinghua\Zvoyager\Http\Models\GroupUserObjectPermission;
+use Zijinghua\Zvoyager\Http\Models\Role;
 use Zijinghua\Zvoyager\Http\Repositories\ActionRepository;
 use Zijinghua\Zbasement\Http\Repositories\Contracts\UserRepositoryInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ActionRepositoryInterface;
@@ -195,7 +197,10 @@ class ZServiceProvider extends BaseServiceProvider
             return new GroupFamily();
         });
 
-
+        $loader->alias('roleModel', RoleModelInterface::class);
+        $this->app->singleton('roleModel', function () {
+            return new Role();
+        });
     }
     public function boot(Router $router, Dispatcher $event)
     {

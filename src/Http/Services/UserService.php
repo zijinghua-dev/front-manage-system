@@ -4,6 +4,7 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+use Illuminate\Support\Facades\DB;
 use Zijinghua\Zvoyager\Http\Contracts\UserServiceInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
@@ -138,5 +139,53 @@ class UserService extends BaseService implements UserServiceInterface
         }
         $messageResponse=$this->messageResponse($slug,$action.'.validation.success',$data);
         return $messageResponse;
+    }
+
+    public function delete($parameters){
+        $userId=$parameters['userId'];
+        //删除用户
+        DB::beginTransaction();
+        try {
+            //找出个人own的全部对象
+            $repository=$this->repository('userObject');
+            $search['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
+            $dataSet=$repository->index($search);
+            //先转换一下数据集结构
+            $objects=[];
+            foreach ($dataSet as $key=>$item){
+                $objects[$item['datatype_id']][]=$item['object_id'];
+            }
+            $num=0;
+            //删除数据对象本身
+            foreach ($objects as $key=>$item){
+                $repository=$this->repository('datatype');
+                $datatype=$repository->show(['id'=>$key]);
+                $slug=strtolower($datatype->slug);
+                $repository=$this->repository($slug);
+                $num=$repository->destroy(['id'=>$item]);
+            }
+            //删除拥有数据对象的记录
+            $repository=$this->repository('userObject');
+            $num=$num+$repository->destroy($search);
+            //删除该用户的全部分享记录、一对一的全部权限记录
+            $repository=Zsystem::repository('guop');
+            $num=$num+$repository->destroy($search);
+            //删除该用户的全部角色
+            $repository=Zsystem::repository('groupUserRole');
+            $num=$num+$repository->destroy($search);
+            //删除该用户的全部角色对应的权限
+            $repository=Zsystem::repository('groupUserPermission');
+            $num=$num+$repository->destroy($search);
+
+            DB::commit();
+
+            $messageResponse=$this->messageResponse($this->getSlug(),'delete.submit.success');
+            return $messageResponse;
+        } catch (Exception $e) {
+            DB::rollback();
+//            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
+            $messageResponse=$this->messageResponse($this->getSlug(),'delete.submit.failed');
+            return $messageResponse;
+        }
     }
 }

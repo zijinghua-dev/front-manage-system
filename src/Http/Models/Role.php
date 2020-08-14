@@ -5,9 +5,9 @@ namespace Zijinghua\Zvoyager\Http\Models;
 
 
 use Zijinghua\Zbasement\Http\Models\BaseModel;
-use Zijinghua\Zvoyager\Http\Contracts\GroupRoleModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\RoleModelInterface;
 
-class GroupRole extends BaseModel implements GroupRoleModelInterface
+class Role extends BaseModel implements RoleModelInterface
 {
-    protected $table='group_role_permissions';
+    protected $table='roles';
 }
