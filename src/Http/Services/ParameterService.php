@@ -80,6 +80,7 @@ class ParameterService extends BaseService implements ParameterServiceInterface
             $data['datatypeId']=$repository->key($data['slug']);//slugId就是datatypeId
         }
         if(!isset($data['action'])){
+//            $method=$request->route()->getActionName();
             list($class, $method) = explode('@', $request->route()->getActionName());
             $data['action']=$method;
         }

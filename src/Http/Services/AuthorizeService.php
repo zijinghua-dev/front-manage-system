@@ -120,6 +120,14 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         //当前对象是不是仅仅被该用户拥有？并没有被任何一个组拥有
         //该用户是否通过子组拥有该对象
         //首先获取该对象，拿到owner和owner组
+
+        if(($datatypeSlug=='user')or($datatypeSlug=='users')or($datatypeSlug=='User')or($datatypeSlug=='Users')){
+            //用户类型是一个特殊数据对象，没有owner，只有owner_group
+            if($userId==$objectId){
+                return true;
+            }
+            return false;
+        }
         $repository=Zsystem::repository($datatypeSlug);
         $search['search'][]=['field'=>'id','value'=>$objectId,"filter"=>"=",'algorithm'=>'and'];
         $object=$repository->fetch($search);
