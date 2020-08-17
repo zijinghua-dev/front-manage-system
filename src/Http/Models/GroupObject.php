@@ -11,6 +11,6 @@ class GroupObject extends BaseModel implements GroupObjectModelInterface
 {
     protected $table='group_objects';
     protected $fillable = [
-        'group_id', 'datatype_id', 'object_id'
+        'group_id', 'datatype_id', 'object_id','owned'
     ];
 }

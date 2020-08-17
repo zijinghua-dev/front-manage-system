@@ -70,7 +70,7 @@ class AuthService extends BaseService implements AuthServiceInterface
         $this->incrementLoginAttempts($request);
 
 //        $code='zbasement.code.'.$this->getSlug().'.login.error';
-        $messageResponse=$this->messageResponse($this->getSlug(),'login.failed');
+        $messageResponse=$this->messageResponse($this->getSlug(),'login.submit.failed');
         return $messageResponse;
     }
 

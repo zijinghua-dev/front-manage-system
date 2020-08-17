@@ -206,6 +206,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $result;
     }
 
+    //delete方法，如果不是平台owner和管理员，数据对象需要被组owner有删除权限的用户，或者是个人owner删除
     public function checkGroupPermission($parameters){
         //如果不是该用户单独拥有，也不是公共操作，检查有没有单独为该用户分配该对象的权限？group_user_object_permissions.
         $result=$this->checkGuop($parameters);
@@ -237,11 +238,15 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
                 }
                 //这个动作依赖对象的属性吗？从组内移除，不依赖对象，
                 if($this->isObjectAbility($parameters)){
+                    //如果这个对象是被当前组owner,默认允许一切操作，但是，一旦设置了一条规则，就按规则执行
                     //在当前组，该对象有对应的动作的属性吗？没有，报权限错误
                     $result=$this->objectHasAbility($parameters);
-                    if(!$result){
+                    if(isset($result)) {
+
+                        if (!$result) {
 //                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-                        return $result;//
+                            return $result;//
+                        }
                     }
                 }
             }
@@ -752,15 +757,28 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     //一个对象在一个容器里，会给予动作限制，可以做哪些动作，不能做哪些动作
     public function objectHasAbility($parameters)
     {
+        //如果这个对象是被当前组owner,默认允许一切操作，但是，一旦设置了一条规则，就按规则执行
         $repository=Zsystem::repository('objectAction');
         $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
-        $search['search'][]=['field'=>'action_id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
-        //enabled用来某项操作，比如，咨询卡已经使用过了，那么，在这个组里，就不能再次消费这个卡，
-        $search['search'][]=['field'=>'enabled','value'=>1,'filter'=>'=','algorithm'=>'and'];
-        $result=$repository->fetch($search);
-        if(isset($result)){
+        $result=$repository->index($search);
+        if($result->count()==0){
+            //如果对象被当前组owner，则表明现在是默认状况，允许一切操作
+            $repository=Zsystem::repository($parameters['slug']);
+            $object=$repository->show(['id'=>$parameters['id']]);
+            if(!isset($object)){
+                return;
+            }
+            if(isset($object->owner_group_id)){
+                if($object->owner_group_id==$parameters['groupId']){
+                    return true;
+                }
+            }
+        }
+        //如果规则已经存在，看看当前动作是不是被许可了
+        $result=$result->where('action_id',$parameters['actionId'])->where('enabled',1);
+        if($result->count()>0){
             return true;
         }
         return false;
