@@ -96,23 +96,23 @@ class ZServiceProvider extends BaseServiceProvider
         $this->app->singleton('userService', UserService::class);
 
         $loader->alias('userModel', UserModelInterface::class);
-        $this->app->singleton('userModel', function () {
+        $this->app->bind('userModel', function () {
             return new RestfulUser();
         });
 
 
         $loader->alias('userRepository', UserRepositoryInterface::class);
-        $this->app->singleton('userRepository', function () {
+        $this->app->bind('userRepository', function () {
             return new RestfulUserRepository();
         });
 
         $loader->alias('groupModel', GroupModelInterface::class);
-        $this->app->singleton('groupModel', function () {
+        $this->app->bind('groupModel', function () {
             return new Group();
         });
 
         $loader->alias('groupRepository', GroupRepositoryInterface::class);
-        $this->app->singleton('groupRepository', function () {
+        $this->app->bind('groupRepository', function () {
             return new GroupRepository();
         });
 
@@ -122,29 +122,29 @@ class ZServiceProvider extends BaseServiceProvider
         });
 
         $loader->alias('datatypeModel', DatatypeModelInterface::class);
-        $this->app->singleton('datatypeModel', function () {
+        $this->app->bind('datatypeModel', function () {
             return new Datatype();
         });
 
         $loader->alias('datatypeRepository', DatatypeRepositoryInterface::class);
-        $this->app->singleton('datatypeRepository', function () {
+        $this->app->bind('datatypeRepository', function () {
             return new DatatypeRepository();
         });
 
 
         $loader->alias('groupDatatypeModel', GroupDatatypeModelInterface::class);
-        $this->app->singleton('groupDatatypeModel', function () {
+        $this->app->bind('groupDatatypeModel', function () {
             return new GroupDatatype();
         });
 
 
         $loader->alias('actionModel', ActionModelInterface::class);
-        $this->app->singleton('actionModel', function () {
+        $this->app->bind('actionModel', function () {
             return new Action();
         });
 
         $loader->alias('actionRepository', ActionRepositoryInterface::class);
-        $this->app->singleton('actionRepository', function () {
+        $this->app->bind('actionRepository', function () {
             return new ActionRepository();
         });
 
@@ -153,22 +153,22 @@ class ZServiceProvider extends BaseServiceProvider
         $this->app->singleton('authorizeService', AuthorizeService::class);
 
         $loader->alias('groupUserPermissionModel', GroupUserPermissionModelInterface::class);
-        $this->app->singleton('groupUserPermissionModel', function () {
+        $this->app->bind('groupUserPermissionModel', function () {
             return new GroupUserPermission();
         });
 
         $loader->alias('groupRolePermissionModel', GroupRolePermissionModelInterface::class);
-        $this->app->singleton('groupRolePermissionModel', function () {
+        $this->app->bind('groupRolePermissionModel', function () {
             return new GroupRolePermission();
         });
 
         $loader->alias('objectActionModel', ObjectActionModelInterface::class);
-        $this->app->singleton('objectActionModel', function () {
+        $this->app->bind('objectActionModel', function () {
             return new ObjectAction();
         });
 
         $loader->alias('groupObjectModel', GroupObjectModelInterface::class);
-        $this->app->singleton('groupObjectModel', function () {
+        $this->app->bind('groupObjectModel', function () {
             return new GroupObject();
         });
 
@@ -178,27 +178,27 @@ class ZServiceProvider extends BaseServiceProvider
         });
 
         $loader->alias('guopModel', GuopModelInterface::class);
-        $this->app->singleton('guopModel', function () {
+        $this->app->bind('guopModel', function () {
             return new GroupUserObjectPermission();
         });
 
         $loader->alias('groupParentModel', GroupParentModelInterface::class);
-        $this->app->singleton('groupParentModel', function () {
+        $this->app->bind('groupParentModel', function () {
             return new GroupParent();
         });
 
         $loader->alias('groupUserRoleModel', GurModelInterface::class);
-        $this->app->singleton('groupUserRoleModel', function () {
+        $this->app->bind('groupUserRoleModel', function () {
             return new GroupUserRole();
         });
 
         $loader->alias('groupFamilyModel', GroupFamilyModelInterface::class);
-        $this->app->singleton('groupFamilyModel', function () {
+        $this->app->bind('groupFamilyModel', function () {
             return new GroupFamily();
         });
 
         $loader->alias('roleModel', RoleModelInterface::class);
-        $this->app->singleton('roleModel', function () {
+        $this->app->bind('roleModel', function () {
             return new Role();
         });
     }
