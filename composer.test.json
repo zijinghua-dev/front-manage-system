@@ -1,0 +1,41 @@
+{
+  "name": "zijinghua-dev/zvoyager",
+  "description": "common UserProvider",
+  "type": "library",
+  "require": {
+    "illuminate/support": "~5.5|~6.0",
+    "laravel/framework": "6.0.*",
+    "laravel/tinker": "^1.0",
+    "phpmd/phpmd": "2.7.*",
+    "squizlabs/php_codesniffer": "3.5",
+    "tymon/jwt-auth": "1.0.*",
+    "phpunit/phpunit": "6.*",
+    "guzzlehttp/guzzle": "~6.0",
+    "mockery/mockery": "1.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Zijinghua\\Zvoyager\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "zijinghua",
+      "email": "sysadmin@haokuaidian.cn"
+    }
+  ],
+  "minimum-stability": "dev",
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Zijinghua\\Zvoyager\\ZServiceProvider"
+      ]
+    }
+  }
+}
+

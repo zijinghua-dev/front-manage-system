@@ -11,5 +11,4 @@ class Group extends BaseModel implements GroupModelInterface
 {
     protected $table='groups';
     protected $fillable=['name','describe'];
-
 }

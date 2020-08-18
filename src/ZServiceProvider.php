@@ -62,7 +62,7 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('userRepository', UserRepositoryInterface::class);
         $this->app->singleton('userRepository', function () {
             return new RestfulUserRepository();
-        });
+        });  
 
         $loader->alias('groupModel', GroupModelInterface::class);
         $this->app->singleton('groupModel', function () {
