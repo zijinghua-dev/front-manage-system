@@ -15,16 +15,14 @@ class Authorize
 //    use Parameters;
     public function handle($request, Closure $next)
     {
-        //把userId写入request
-        $data=$request->all();
-//        $data['userId']=Auth::user()->id;
-//        $request->replace($data);
-        //用户如果是第一组成员，或者是第一组owner，执行一切动作
-        $service=Zsystem::service('authorize');
-        $messageResponse=$service->checkPermission($data);
-        if(!$messageResponse->code->status){
-                return $messageResponse->response();//权限不足和参数出错
-        }
+//        //把userId写入request
+//        $data=$request->all();
+//        //用户如果是第一组成员，或者是第一组owner，执行一切动作
+//        $service=Zsystem::service('authorize');
+//        $messageResponse=$service->checkPermission($data);
+//        if(!$messageResponse->code->status){
+//                return $messageResponse->response();//权限不足和参数出错
+//        }
         return $next($request);
 
 

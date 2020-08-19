@@ -2,6 +2,8 @@
 
 namespace Zijinghua\Zvoyager\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Zijinghua\Zbasement\Events\Api\InterfaceAfterEvent;
 use Zijinghua\Zbasement\Events\Api\InterfaceBeforeEvent;
 use Zijinghua\Zvoyager\Http\Requests\UpdatePasswordRequest;
@@ -24,7 +26,14 @@ class UserController extends BaseController
     }
 
     public function show(ShowRequest $request){
-        $response=$this->execute($request,'show');
+//        $response=$this->execute($request,'show');
+//        return $response;
+    }
+
+    public function index(IndexRequest $request){
+//        Log::info(123);
+
+        $response=$this->execute($request,'index');
         return $response;
     }
 //    public function index(IndexRequest $request){

@@ -11,10 +11,10 @@ Route::group(['middleware' => ['api','zCheckExternalNames']], function () {
         Route::post('login', 'AuthController@login');
     });
 });
-Route::group(['middleware' => ['api','setRequestParameters']], function () {
-
+//Route::group(['middleware' => ['api','setRequestParameters']], function () {
+    Route::group([], function () {
     Route::group(['prefix' => 'user',], function () {
-        Route::post('/', 'UserController@store');
+        Route::post('/store', 'UserController@store');
     });
 
 
@@ -31,18 +31,18 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
     });
 
     //,'zCheckGroup'
-    Route::group(['middleware'=>['auth:api','zUserId','zAuthorize']], function () {
-
+//    Route::group(['middleware'=>['auth:api','zUserId','zAuthorize']], function () {
+        Route::group([], function () {
         Route::group(['prefix' => 'auth',], function () {
             Route::post('logout', 'AuthController@logout');
         });
 
-        Route::group(['middleware' => 'zCheckExternalNames','prefix' => 'user'], function () {
-
+//        Route::group(['middleware' => 'zCheckExternalNames','prefix' => 'user'], function () {
+            Route::group(['prefix' => 'user'], function () {
             Route::post('/index', 'UserController@index');
             Route::post('/fetch', 'UserController@fetch');
-            Route::get('/{id}', 'UserController@show');
-            Route::put('/', 'UserController@update');
+            Route::get('/show/{id}', 'UserController@show');
+            Route::put('/update', 'UserController@update');
             Route::post('/search', 'UserController@search');
             Route::put('/updatepassword', 'UserController@updatePassword');
             Route::post('/clear', 'UserController@clear');
@@ -80,13 +80,13 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
         });
 
         Route::group(['prefix' => 'role'], function () {
-            Route::post('/', 'RoleController@store');
+            Route::post('store', 'RoleController@store');
             Route::post('/index', 'RoleController@index');
             Route::post('/fetch', 'RoleController@fetch');
             Route::get('/{id}', 'RoleController@show');
             Route::post('/search', 'RoleController@search');
             Route::put('/', 'RoleController@update');
-            Route::delete('/', 'RoleController@delete');//批量删除，参数名为id，可以传array
+            Route::delete('/', 'RoleController@delete');//批量删除，参数名为uuid，可以传array
             Route::post('/authorize', 'RoleController@authorize');//给角色授予权限；给用户授予角色
 //            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
         });
