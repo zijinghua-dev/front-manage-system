@@ -5,13 +5,13 @@
  * Date: 2020-01-17
  * Time: 11:33
  */
-$version=config(env('API_VERSION','v1'));
-Route::group(['middleware' => ['api','zCheckExternalNames'],'prefix' => $version,], function () {
+//$version=config(env('API_VERSION'),null);
+Route::group(['middleware' => ['api','zCheckExternalNames']], function () {
     Route::group(['prefix' => 'auth'], function () {
         Route::post('login', 'AuthController@login');
     });
 });
-Route::group(['middleware' => ['api','setRequestParameters'],'prefix' =>$version,], function () {
+Route::group(['middleware' => ['api','setRequestParameters']], function () {
 
     Route::group(['prefix' => 'user',], function () {
         Route::post('/', 'UserController@store');
@@ -76,6 +76,18 @@ Route::group(['middleware' => ['api','setRequestParameters'],'prefix' =>$version
             Route::put('/', 'DatatypeController@update');
             Route::delete('/{groupId}', 'DatatypeController@destroy');
             Route::post('/delete', 'DatatypeController@delete');//批量删除，参数名为uuid，可以传array
+//            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
+        });
+
+        Route::group(['prefix' => 'role'], function () {
+            Route::post('/', 'RoleController@store');
+            Route::post('/index', 'RoleController@index');
+            Route::post('/fetch', 'RoleController@fetch');
+            Route::get('/{id}', 'RoleController@show');
+            Route::post('/search', 'RoleController@search');
+            Route::put('/', 'RoleController@update');
+            Route::delete('/', 'RoleController@delete');//批量删除，参数名为id，可以传array
+            Route::post('/authorize', 'RoleController@authorize');//给角色授予权限；给用户授予角色
 //            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
         });
     });

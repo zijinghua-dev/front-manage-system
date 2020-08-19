@@ -325,7 +325,8 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             //检查在目的组的权限
             if($this->isTernaryAction($parameters['actionId'])) {
                 return $this->checkGroupPermission(['groupId' => $parameters['destinationGroupId'],
-                    'userId' => $parameters['userId'], 'datatypeId' => $parameters['datatypeId'], 'slug' => $parameters['slug'],
+                    'userId' => $parameters['destinationUserId'], 'datatypeId' => $parameters['destinationDatatypeId'],
+                    'slug' => $parameters['destinationSlug'],
                     'actionId' => $parameters['destinationActionId']]);
             }
             return true;
@@ -663,7 +664,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             //同时剔除已经时间无效的角色
             foreach ($result as $key=>$item){
                 if((($item->schedule_begin==null)&&($item->schedule_end==null))||($item->schedule_begin<time()&&$item->schedule_end>time())){
-                    $roleSet[]=$item->id;
+                    $roleSet[]=$item->role_id;
                 }
 
             }
@@ -676,7 +677,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $repository=Zsystem::repository('groupRolePermission');
         unset($search);
 //        $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
-        $search['search'][]=['field'=>'gur_id','value'=>$roleSet,'filter'=>'in','algorithm'=>'and'];
+        $search['search'][]=['field'=>'role_id','value'=>$roleSet,'filter'=>'in','algorithm'=>'and'];
         $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'action_id','value'=>$actionId,'filter'=>'=','algorithm'=>'and'];
         $result=$repository->fetch($search);//源组的操作权限全部取出来了

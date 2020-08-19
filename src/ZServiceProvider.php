@@ -11,6 +11,7 @@ use Zijinghua\Zvoyager\Http\Contracts\GurModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ObjectActionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\RoleServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
@@ -62,6 +63,7 @@ use Zijinghua\Zvoyager\Guards\ZGuard;
 
 use Zijinghua\Zvoyager\Http\Services\GroupService;
 use Zijinghua\Zvoyager\Http\Services\ParameterService;
+use Zijinghua\Zvoyager\Http\Services\RoleService;
 use Zijinghua\Zvoyager\Http\Services\UserService;
 use Zijinghua\Zvoyager\Providers\AuthServiceProvider;
 use Zijinghua\Zvoyager\Providers\ClientRestfulUserProvider;
@@ -200,6 +202,11 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('roleModel', RoleModelInterface::class);
         $this->app->bind('roleModel', function () {
             return new Role();
+        });
+
+        $loader->alias('roleService', RoleServiceInterface::class);
+        $this->app->bind('roleService', function () {
+            return new RoleService();
         });
     }
     public function boot(Router $router, Dispatcher $event)

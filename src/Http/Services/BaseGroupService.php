@@ -49,14 +49,15 @@ class BaseGroupService extends BaseService
             if($this->getSlug()=='group'){
                 $ids= array_merge($ids,$groupIds);
             }
-            $gurIds=$result->pluck('id')->toArray();
+            $roleIds=$result->pluck('role_id')->toArray();
         }
 
         //这些角色可以操作本对象类型吗？
-        if(isset($gurIds)){
+        if(isset($groupIds)){
             $repository=$this->repository('groupRolePermission');
             unset($search);
-            $search['search'][]=['field'=>'gur_id','value'=>$gurIds,'filter'=>'in','algorithm'=>'and'];
+            $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
+            $search['search'][]=['field'=>'role_id','value'=>$roleIds,'filter'=>'in','algorithm'=>'and'];
             $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
             $result=$repository->index($search);
             if($result->count()>0){
