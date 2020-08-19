@@ -263,6 +263,17 @@ class GroupService extends BaseGroupService implements GroupServiceInterface
 
     }
 
+    public function store($parameters)
+    {
+        $data['name'] = $parameters['name'];
+        if(isset($parameters['picture'])){
+            $data['picture']=$parameters['picture'];
+        }
+        if(isset($parameters['describe'])){
+            $data['describe']=$parameters['describe'];
+        }
+        return parent::store($data);
+    }
 //    protected function deleteRelation($parameters){
 //        $model=Zsystem::model('groupDatatype');
 //
