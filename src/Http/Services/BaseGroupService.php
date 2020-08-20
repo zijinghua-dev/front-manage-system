@@ -18,6 +18,7 @@ class BaseGroupService extends BaseService
         //首先看group_objects
         $ids=[];
         $repository=$this->repository('groupObject');
+        $search['paginate']=0;
         $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
@@ -33,6 +34,7 @@ class BaseGroupService extends BaseService
         //再看这个用户own了哪些对象
         $repository=$this->repository($this->getSlug());
         unset($search);
+        $search['paginate']=0;
         $search['search'][]=['field'=>'owner_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
         if($result->count()>0){
@@ -42,6 +44,7 @@ class BaseGroupService extends BaseService
         //最后看这个用户在哪些组里有角色
         $repository=$this->repository('groupUserRole');
         unset($search);
+        $search['paginate']=0;
         $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
         if($result->count()>0){
@@ -56,6 +59,7 @@ class BaseGroupService extends BaseService
         if(isset($groupIds)){
             $repository=$this->repository('groupRolePermission');
             unset($search);
+            $search['paginate']=0;
             $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
             $search['search'][]=['field'=>'role_id','value'=>$roleIds,'filter'=>'in','algorithm'=>'and'];
             $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
@@ -66,6 +70,7 @@ class BaseGroupService extends BaseService
             //这些组里有这个类型的对象吗？
             $repository=$this->repository('groupObject');
             unset($search);
+            $search['paginate']=0;
             $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
             $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
             $result=$repository->index($search);
@@ -167,7 +172,7 @@ class BaseGroupService extends BaseService
         $ids=$dataSet->pluck('object_id')->toArray();
         $repository=$this->repository($this->getSlug());
         unset($search);
-        $search['paginate']=0;//0表示获取全部数据，不分页
+//        $search['paginate']=0;//0表示获取全部数据，不分页
         $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
         $dataSet=$repository->index($search);
         if($dataSet->count()==0){
