@@ -156,13 +156,18 @@ class BaseGroupService extends BaseService
         $groupId=$parameters['groupId'];
         $datatypeId=$parameters['datatypeId'];
         $repository=$this->repository('groupObject');
-        $dataSet=$repository->index(['group_id'=>$groupId,'datatype_id'=>$datatypeId]);
+        $search['paginate']=0;//0表示获取全部数据，不分页
+        $search['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
+        $dataSet=$repository->index($search);
         if($dataSet->count()==0){
             $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success');
             return $messageResponse;
         }
         $ids=$dataSet->pluck('object_id')->toArray();
         $repository=$this->repository($this->getSlug());
+        unset($search);
+        $search['paginate']=0;//0表示获取全部数据，不分页
         $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
         $dataSet=$repository->index($search);
         if($dataSet->count()==0){

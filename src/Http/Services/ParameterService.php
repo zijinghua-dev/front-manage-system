@@ -95,6 +95,10 @@ class ParameterService extends BaseService implements ParameterServiceInterface
         if(!isset($data['groupId'])){
             $data['groupId']=null;
         }
+//        $groupId=$request->input('groupId');
+//        if(isset($groupId)){
+//            $data['groupId']=$groupId;
+//        }
 
         //输入destinationGroupId,destinationUserUuid,destinationUserUuid需要转换成id
         //输入$actionId要转换为
