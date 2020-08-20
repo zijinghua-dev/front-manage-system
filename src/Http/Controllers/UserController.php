@@ -26,8 +26,8 @@ class UserController extends BaseController
     }
 
     public function show(ShowRequest $request){
-//        $response=$this->execute($request,'show');
-//        return $response;
+        $response=$this->execute($request,'show');
+        return $response;
     }
 
     public function index(IndexRequest $request){

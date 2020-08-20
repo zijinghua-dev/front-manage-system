@@ -11,8 +11,7 @@ Route::group(['middleware' => ['api','zCheckExternalNames']], function () {
         Route::post('login', 'AuthController@login');
     });
 });
-//Route::group(['middleware' => ['api','setRequestParameters']], function () {
-    Route::group([], function () {
+Route::group(['middleware' => ['api','setRequestParameters']], function () {
     Route::group(['prefix' => 'user',], function () {
         Route::post('/store', 'UserController@store');
     });
@@ -25,20 +24,19 @@ Route::group(['middleware' => ['api','zCheckExternalNames']], function () {
             Route::post('/mine', 'GroupController@mine');
         });
 
-        Route::group(['prefix' => 'campaign',], function () {
-            Route::post('run', 'CampaignController@run');
-        });
+//        Route::group(['prefix' => 'campaign',], function () {
+//            Route::post('run', 'CampaignController@run');
+//        });
     });
 
     //,'zCheckGroup'
-//    Route::group(['middleware'=>['auth:api','zUserId','zAuthorize']], function () {
-        Route::group([], function () {
+    Route::group(['middleware'=>['auth:api','zUserId','zAuthorize']], function () {
         Route::group(['prefix' => 'auth',], function () {
             Route::post('logout', 'AuthController@logout');
         });
 
-//        Route::group(['middleware' => 'zCheckExternalNames','prefix' => 'user'], function () {
-            Route::group(['prefix' => 'user'], function () {
+        Route::group(['middleware' => 'zCheckExternalNames','prefix' => 'user'], function () {
+
             Route::post('/index', 'UserController@index');
             Route::post('/fetch', 'UserController@fetch');
             Route::get('/show/{id}', 'UserController@show');

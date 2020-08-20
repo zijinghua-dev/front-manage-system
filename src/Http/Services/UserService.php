@@ -12,7 +12,7 @@ use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zbasement\Http\Services\BaseService;
 use Zijinghua\Zvoyager\Traits\Credential;
 
-class UserService extends BaseService implements UserServiceInterface
+class UserService extends BaseGroupService implements UserServiceInterface
 {
     use Credential;
     protected $username;

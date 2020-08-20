@@ -149,4 +149,33 @@ class BaseGroupService extends BaseService
         //调用者如果是组的话，还要删除所有自己own的对象；凡是不能被关联删除的表，应当注明，并自行维护关联数据，在关联表数据被删除后，还能保持自身不出错
         return $num;
     }
+
+    //返回结果：1，没有这个字段，false；2，没有值，null
+    public function index($parameters){
+        //组内groupObject
+        $groupId=$parameters['groupId'];
+        $datatypeId=$parameters['datatypeId'];
+        $repository=$this->repository('groupObject');
+        $dataSet=$repository->index(['group_id'=>$groupId,'datatype_id'=>$datatypeId]);
+        if($dataSet->count()==0){
+            $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success');
+            return $messageResponse;
+        }
+        $ids=$dataSet->pluck('object_id')->toArray();
+        $repository=$this->repository($this->getSlug());
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $dataSet=$repository->index($search);
+        if($dataSet->count()==0){
+            $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success');
+            return $messageResponse;
+        }
+        //测试代码---------------------------------
+//        $result=UserResource::collection($result);
+        //测试代码结束---------------------------------
+        //如果$result为null或空，那么意味着刚刚删除掉这个数据，应该报异常
+//        $code='zbasement.code.'.$this->slug.'.index.success';
+        $resource=$this->getResource($this->getSlug(),'index');
+        $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success', $dataSet,$resource);
+        return $messageResponse;
+    }
 }

@@ -90,7 +90,7 @@ class RoleService extends BaseGroupService implements RoleServiceInterface
             //先将用户添加进组
 
             $repository=$this->repository('groupObject');
-            $repository->save(['datatype_id'=>$datatypeId,'user_id'=>$parameters['authorizeUserId'],
+            $repository->save(['datatype_id'=>$datatypeId,'object_id'=>$parameters['authorizeUserId'],
                 'group_id'=>$parameters['groupId']]);
             //给用户授权
             $repository=$this->repository('groupUserRole');
