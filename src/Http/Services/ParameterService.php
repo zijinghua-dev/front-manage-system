@@ -84,9 +84,15 @@ class ParameterService extends BaseService implements ParameterServiceInterface
             list($class, $method) = explode('@', $request->route()->getActionName());
             $data['action']=$method;
         }
+        //如果是三元操作符，把其余参数也进行转换
         if(!isset($data['actionId'])){
             $repository=Zsystem::repository('action');
-            $data['actionId']=$repository->key($data['action']);
+            $search['search'][]=['field'=>'name','value'=>$data['action'],'filter'=>'=','algorithm'=>'or'];
+            $action=$repository->fetch($search);
+            if($action->ternary){
+                $data['ternaryActionId']=$action->ternary_id;
+            }
+            $data['actionId']=$action->id;
         }
 
         //然后拿到组ID

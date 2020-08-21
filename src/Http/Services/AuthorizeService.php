@@ -213,11 +213,6 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         if($result){
             return true;
         }
-        //group_user_object_permissions表里没有数据，而groupId又为null，肯定该用户是没有权限的了
-        if(!isset($parameters['groupId'])){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-            return false;//
-        }
 
         //操作对象是不是就是当前组?还是当前组内的一个数据对象
         $result=$this->isCurrentGroup($parameters);
@@ -271,6 +266,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     }
 
     //返回null，出错了，返回false，没有找到
+    //我自己拥有的对象，与组无关的操作
     public function checkPersonalOwnerPermission($parameters){
         //如果没有id，证明不是一对一
         if(!isset($parameters['id'])){
@@ -280,25 +276,38 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         if($result){
             //如果不在组里操作，也不是三元操作符，那就可以操作了
             if(!isset($parameters['groupId'])) {
-                if(!$this->isTernaryAction($parameters['actionId'])){
+                if (!$this->isTernaryAction($parameters['actionId'])) {
                     return true;
-                }else{
-                    //如果是三元操作，检查目的组权限
-                    $result=$this->checkGroupPermission(['groupId'=>$parameters['destinationGroupId'],
-                        'userId'=>$parameters['userId'],'datatypeId'=>$parameters['datatypeId'],'slug'=>$parameters['slug'],
-                        'actionId'=>$parameters['destinationActionId']]);
-                    return $result;
                 }
-            }else{
-                return false;//不允许在组里操作个人owner的对象，只能把个人的对象发布到组里（从组外到组内）
             }
         }
         return $result;
     }
 
+    //如果用户不拥有这个对象，看看是不是有操作的权限
+    public function checkPersonalRecipientPermission($parameters){
+        //如果没有id，证明不是一对一
+        if(!isset($parameters['id'])){
+            return false;
+        }
+        if(!isset($parameters['groupId'])){
+            return $result=$this->checkGuop($parameters);
+        }
+
+        return false;
+    }
+
     public function checkUserPermission($parameters){
         //非平台owner和管理员，没有group_id，只能查看个人own和分享的对象：mine，或者是一对一
         //非平台owner和管理员，有object_id，先检查是不是单独拥有的对象，单独拥有，可以操作一切非三元动作
+
+        //是公共组的公开操作吗？
+        $result=$this->checkPublicAction($parameters);
+        if(!isset($result)){
+            return ;
+        }elseif($result){
+            return $result;
+        }
 
             //该用户单独拥有该对象吗？
             $result = $this->checkPersonalOwnerPermission($parameters);
@@ -308,30 +317,45 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
                 return $result;
             }
 
-            //是公共组的公开操作吗？
-            $result=$this->checkPublicAction($parameters);
-            if(!isset($result)){
-                return ;
-            }elseif($result){
+            //如果不是单独拥有，是用户间的分享吗？
+         $result = $this->checkPersonalRecipientPermission($parameters);
+            if (!isset($result)) {
+                return;//
+            } elseif ($result) {
                 return $result;
             }
-//        }
 
+
+        //是对某个数据类型的操作吗？index之类则必须要有组角色，只有mine可以不经过授权
+        if(!isset($parameters['groupId'])){
+            return false;//必须要groupId
+        }
         //检查在源组的权限。允许用户不在该组内，但操作对象一定要在该组内
         $result=$this->checkGroupPermission($parameters);
-        if(!isset($result)){
-            return ;
-        }elseif($result){
-            //检查在目的组的权限
+        if(isset($result)&&$result){
+            //检查在目的组的权限;如果是三元操作，必然要有objectId，可以没有有groupId，
             if($this->isTernaryAction($parameters['actionId'])) {
-                return $this->checkGroupPermission(['groupId' => $parameters['destinationGroupId'],
-                    'userId' => $parameters['destinationUserId'], 'datatypeId' => $parameters['destinationDatatypeId'],
-                    'slug' => $parameters['destinationSlug'],
-                    'actionId' => $parameters['destinationActionId']]);
+                return $this->checkTernaryPermission($parameters);
             }
-            return true;
         }
-        return false;
+        return $result;
+    }
+
+    public function checkTernaryPermission($parameters){
+        //检查在目的组的权限;如果是三元操作，必然要有objectId，可以没有有groupId，
+        //三元操作，把一个数据对象分享给另一个用户，或者是另一个组
+        $data['id']=$parameters['id'];//必有
+        $data['actionId']=$parameters['destinationActionId'];//必有
+        $data['slug'] = $parameters['slug'];//必有
+        $data['datatypeId'] = $parameters['datatypeId'];//必有
+        if(isset($parameters['destinationGroupId'])){
+            $data['groupId']=$parameters['destinationGroupId'];
+        }
+        if(isset($parameters['destinationUserId'])){
+            $data['userId']=$parameters['destinationUserId'];
+        }
+        return $this->checkUserPermission($data);
+
     }
 
     public function checkPermission($parameters){
@@ -447,7 +471,11 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             return $result;
         }
         if(strtolower($result->name)=='group'||strtolower($result->name)=='groups'){
-            if($parameters['id']==$parameters['groupId']){
+            if(isset($parameters['id'])){
+                if($parameters['id']==$parameters['groupId']){
+                    return true;
+                }
+            }else{
                 return true;
             }
         }
