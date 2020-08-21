@@ -116,7 +116,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return true;
     }
 
-    public function isPowerOwner($userId,$datatypeSlug,$objectId){
+    public function hasOwnerPower($userId,$datatypeSlug,$objectId){
         //当前对象是不是仅仅被该用户拥有？并没有被任何一个组拥有
         //该用户是否通过子组拥有该对象
         //首先获取该对象，拿到owner和owner组
@@ -276,7 +276,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         if(!isset($parameters['id'])){
             return false;
         }
-        $result=$this->isPowerOwner($parameters['userId'],$parameters['slug'],$parameters['id']);
+        $result=$this->hasOwnerPower($parameters['userId'],$parameters['slug'],$parameters['id']);
         if($result){
             //如果不在组里操作，也不是三元操作符，那就可以操作了
             if(!isset($parameters['groupId'])) {
