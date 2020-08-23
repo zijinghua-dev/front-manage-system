@@ -266,6 +266,10 @@ class GroupService extends BaseGroupService implements GroupServiceInterface
     public function store($parameters)
     {
         $data['name'] = $parameters['name'];
+        $data['owner_id'] = $parameters['userId'];
+        if(isset($parameters['groupId'])){
+            $data['owner_group_id'] = $parameters['groupId'];
+        }
         if(isset($parameters['picture'])){
             $data['picture']=$parameters['picture'];
         }

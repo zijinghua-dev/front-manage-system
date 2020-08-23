@@ -122,7 +122,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     public function checkPlatformAdminPermission($parameters){
     //这个方法需要在checkOwnerPermission之后使用，否则，即便是平台owner，也有可能没有权限进入任何地方
         //先找到平台管理组
-        $result=$this->isPlatformAdminGroup($parameters['userId']);
+        $result=$this->isPlatformAdmin($parameters['userId']);
         if(!isset($result)){
             return ;//出错啦
         }

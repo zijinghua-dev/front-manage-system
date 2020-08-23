@@ -54,7 +54,7 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
         });
 
         Route::group(['prefix' => 'group'], function () {
-//            Route::post('/', 'GroupController@store');
+            Route::post('/', 'GroupController@store');
             Route::post('/index', 'GroupController@index');
             Route::post('/fetch', 'GroupController@fetch');
             Route::get('/{id}', 'GroupController@show');

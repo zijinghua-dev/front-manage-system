@@ -21,7 +21,8 @@ class DatatypeRepository extends BaseRepository implements DatatypeRepositoryInt
         }else{
             $pSlugName=Str::plural($slugName);
             $pSlugName=strtolower($pSlugName);
-            $parameter['search'][]=['field'=>'slug','value'=>$pSlugName];
+            $parameter['search'][]=['field'=>'slug','value'=>$pSlugName,'filter'=>'=','algorithm'=>'or'];
+            $parameter['search'][]=['field'=>'name','value'=>$pSlugName,'filter'=>'=','algorithm'=>'or'];
         }
 
         return parent::key($parameter);
