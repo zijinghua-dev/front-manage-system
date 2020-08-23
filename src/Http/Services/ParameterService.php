@@ -88,6 +88,7 @@ class ParameterService extends BaseService implements ParameterServiceInterface
         if(!isset($data['actionId'])){
             $repository=Zsystem::repository('action');
             $search['search'][]=['field'=>'name','value'=>$data['action'],'filter'=>'=','algorithm'=>'or'];
+            $search['search'][]=['field'=>'alias','value'=>$data['action'],'filter'=>'=','algorithm'=>'or'];
             $action=$repository->fetch($search);
             if($action->ternary){
                 $data['ternaryActionId']=$action->ternary_id;

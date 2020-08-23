@@ -24,9 +24,13 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::post('/mine', 'GroupController@mine');
         });
 
-//        Route::group(['prefix' => 'campaign',], function () {
-//            Route::post('run', 'CampaignController@run');
-//        });
+        Route::group(['prefix' => 'datatype',], function () {
+            Route::post('/index', 'DatatypeController@index');
+        });
+
+        Route::group(['prefix' => 'action',], function () {
+            Route::post('/index', 'ActionController@index');
+        });
     });
 
     //,'zCheckGroup'
@@ -67,7 +71,7 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
 
         Route::group(['prefix' => 'datatype'], function () {
             Route::post('/', 'DatatypeController@store');
-            Route::post('/index', 'DatatypeController@index');
+
             Route::post('/fetch', 'DatatypeController@fetch');
             Route::get('/{id}', 'DatatypeController@show');
             Route::post('/search', 'DatatypeController@search');
@@ -87,6 +91,16 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::delete('/', 'RoleController@delete');//批量删除，参数名为uuid，可以传array
             Route::post('/authorize', 'RoleController@authorize');//给角色授予权限；给用户授予角色
 //            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
+        });
+
+        Route::group(['prefix' => 'permission'], function () {
+            Route::post('store', 'PermissionController@store');
+            Route::post('/index', 'PermissionController@index');
+            Route::post('/fetch', 'PermissionController@fetch');
+            Route::get('/{id}', 'PermissionController@show');
+            Route::post('/search', 'PermissionController@search');
+            Route::put('/', 'PermissionController@update');
+            Route::delete('/', 'PermissionController@delete');//批量删除，参数名为uuid，可以传array
         });
     });
 //baseservice对某个对象的删除\移除出群\

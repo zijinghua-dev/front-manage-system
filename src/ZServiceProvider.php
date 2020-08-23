@@ -2,6 +2,8 @@
 namespace Zijinghua\Zvoyager;
 
 
+use Zijinghua\Zvoyager\Http\Contracts\ActionServiceInterface;
+use Zijinghua\Zvoyager\Http\Contracts\DatatypeServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupFamilyModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
@@ -56,11 +58,13 @@ use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 use Zijinghua\Zbasement\Http\Models\RestfulUser;
 use Zijinghua\Zbasement\Http\Repositories\RestfulUserRepository;
 use Zijinghua\Zvoyager\Http\Contracts\UserServiceInterface;
+use Zijinghua\Zvoyager\Http\Services\ActionService;
 use Zijinghua\Zvoyager\Http\Services\AuthorizeService;
 use Zijinghua\Zvoyager\Http\Services\AuthService;
 use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
 
+use Zijinghua\Zvoyager\Http\Services\DatatypeService;
 use Zijinghua\Zvoyager\Http\Services\GroupService;
 use Zijinghua\Zvoyager\Http\Services\ParameterService;
 use Zijinghua\Zvoyager\Http\Services\RoleService;
@@ -208,6 +212,17 @@ class ZServiceProvider extends BaseServiceProvider
         $this->app->bind('roleService', function () {
             return new RoleService();
         });
+
+        $loader->alias('datatypeService', DatatypeServiceInterface::class);
+        $this->app->bind('datatypeService', function () {
+            return new DatatypeService();
+        });
+
+        $loader->alias('actionService', ActionServiceInterface::class);
+        $this->app->bind('actionService', function () {
+            return new ActionService();
+        });
+
     }
     public function boot(Router $router, Dispatcher $event)
     {
