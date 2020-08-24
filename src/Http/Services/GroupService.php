@@ -278,10 +278,30 @@ class GroupService extends BaseGroupService implements GroupServiceInterface
         }
         return parent::store($data);
     }
-//    protected function deleteRelation($parameters){
-//        $model=Zsystem::model('groupDatatype');
-//
-//    }
+
+    public function index($parameters){
+        if(isset($parameters['role'])){
+            $repository=$this->repository('role');
+            $roleId=$repository->key($parameters['role']);
+        }
+        $repository=$this->repository('groupUserRole');
+        if(isset($roleId)){
+            $search['search'][]=['field'=>'role_id','value'=>$roleId,'filter'=>'=','algorithm'=>'and'];
+        }
+        $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
+        $result=$repository->index($search);
+        if(!isset($result)){
+            $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
+            return $messageResponse;
+        }
+        $ids=$result->pluck('group_id')->toArray();
+        $repository=$this->repository('group');
+        unset($search);
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $result=$repository->index($search);
+        $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success',$result);
+        return $messageResponse;
+    }
 
 
 

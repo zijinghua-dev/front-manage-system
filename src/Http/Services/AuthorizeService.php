@@ -329,15 +329,16 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             //操作对象是不是就是当前组?还是当前组内的一个数据对象
             //如果是对当前组进行操作，交给下一个方法做验证，这里跳过
             $result = $this->isCurrentGroup($parameters);
-            if (isset($result)) {
-                return false;
+            if (!isset($result)) {
+                return ;
             }
-
-            //当前操作对象在本组内吗？如果不是本组的，就结束了
-            $result = $this->inGroup($parameters);
             if (!$result) {
+                //当前操作对象在本组内吗？如果不是本组的，就结束了
+                $result = $this->inGroup($parameters);
+                if (!$result) {
 //            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-                return $result;//
+                    return $result;//
+                }
             }
         }
 

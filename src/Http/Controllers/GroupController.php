@@ -8,6 +8,8 @@ namespace Zijinghua\Zvoyager\Http\Controllers;
 use Illuminate\Http\Request;
 use Zijinghua\Zbasement\Http\Controllers\BaseController;
 use Zijinghua\Zbasement\Http\Requests\ClearRequest;
+use Zijinghua\Zbasement\Http\Requests\IndexRequest;
+use Zijinghua\Zbasement\Http\Requests\ShowRequest;
 use Zijinghua\Zbasement\Http\Requests\StoreRequest;
 
 
@@ -36,6 +38,13 @@ class GroupController extends BaseGroupController
 
     public function share(Request $request){
         return $this->execute($request,'share');
+    }
+
+    public function show(ShowRequest $request){
+        return $this->execute($request,'show');
+    }
+    public function index(IndexRequest $request){
+        return $this->execute($request,'index');
     }
 
 

@@ -16,11 +16,16 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
         Route::post('/store', 'UserController@store');
     });
 
-
+    Route::group(['prefix' => 'group'], function () {
+        Route::get('/{id}', 'GroupController@show');
+    });
 
     Route::group(['middleware'=>['auth:api','zUserId']], function () {
         Route::group(['prefix' => 'group'], function () {
-//            Route::post('/', 'GroupController@store');
+
+            Route::post('/index', 'GroupController@index');
+            Route::post('/fetch', 'GroupController@fetch');
+            Route::post('/search', 'GroupController@search');
             Route::post('/mine', 'GroupController@mine');
         });
 
@@ -55,12 +60,8 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
 
         Route::group(['prefix' => 'group'], function () {
             Route::post('/', 'GroupController@store');
-            Route::post('/index', 'GroupController@index');
-            Route::post('/fetch', 'GroupController@fetch');
-            Route::get('/{id}', 'GroupController@show');
-            Route::post('/search', 'GroupController@search');
             Route::put('/', 'GroupController@update');
-//            Route::delete('/{groupId}', 'GroupController@destroy');
+
             Route::post('/delete', 'GroupController@delete');//批量删除，可以传array
             Route::post('/append', 'GroupController@append');//向组内添加对象，可以传array
             Route::post('/clear', 'GroupController@clear');//从组内移除对象，并不删除，可以传array
