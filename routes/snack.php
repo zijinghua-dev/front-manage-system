@@ -20,7 +20,13 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
         Route::get('/{id}', 'GroupController@show');
     });
 
+
     Route::group(['middleware'=>['auth:api','zUserId']], function () {
+
+        Route::group(['prefix' => 'menu'], function () {
+            Route::post('/', 'GroupController@index');
+        });
+
         Route::group(['prefix' => 'group'], function () {
 
             Route::post('/index', 'GroupController@index');

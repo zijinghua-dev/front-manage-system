@@ -36,11 +36,27 @@ class ActionService extends BaseGroupService implements ActionServiceInterface
             $messageResponse=$this->messageResponse(null,'authorize.submit.success',$result);
             return $messageResponse;
         }
-
+        //先拿到用户的角色
+        $repository=$this->repository('groupUserRole');
+        unset($search);
+        $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
+        $gur=$repository->index($search);
+        if(isset($gur)){
+            $result=$gur->orWhere('schedule_begin',null)->orWhere('schedule_begin'<now())->orWhere('schedule_end',null)->orWhere('schedule_end'>now());
+        }
+        if(isset($result)){
+            $roleIds=$result->pluck('role_id')->toArray();
+        }
             $repository=$this->repository('groupRolePermission');
             unset($search);
             $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
+            if(isset($parameters['datatypeId'])){
+                $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
+            }
+        if(isset($roleIds)){
+            $search['search'][]=['field'=>'role_id','value'=>$roleIds,'filter'=>'in','algorithm'=>'and'];
+        }
             $grp=$repository->index($search);
         if($grp->count()>0){
             $actionIds=$grp->pluck('action_id')->toArray();
