@@ -137,4 +137,14 @@ class BaseGroupService extends BaseService
         $parameters['owner_id']=$parameters['userId'];
         return parent::store($parameters);
     }
+
+    //把数据对象添加到组里
+    public function add($parameters)
+    {
+        $repository=$this->repository('groupObject');
+        $result=$repository->save(['group_id'=>$parameters['groupId'],'datatype_id'=>$parameters['datatypeId'],
+            'object_id'=>$parameters['id']]);
+        $messageResponse=$this->messageResponse($this->getSlug(),'add.submit.success', $result);
+        return $messageResponse;
+    }
 }

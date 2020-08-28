@@ -60,7 +60,8 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::put('/updatepassword', 'UserController@updatePassword');
             Route::post('/clear', 'UserController@clear');
             Route::post('/delete', 'UserController@delete');
-//            Route::put('/destroy', 'UserController@destroy');
+            Route::post('/add', 'UserController@add');
+            Route::post('/assign', 'UserController@assign');
 
         });
 
@@ -96,7 +97,7 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::post('/search', 'RoleController@search');
             Route::put('/', 'RoleController@update');
             Route::delete('/', 'RoleController@delete');//批量删除，参数名为uuid，可以传array
-            Route::post('/authorize', 'RoleController@authorize');//给角色授予权限；给用户授予角色
+            Route::post('/assign', 'RoleController@assign');//给角色授予权限；给用户授予角色
 //            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
         });
 

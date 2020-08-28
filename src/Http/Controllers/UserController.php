@@ -12,7 +12,7 @@ use Zijinghua\Zbasement\Http\Requests\IndexRequest;
 use Zijinghua\Zbasement\Http\Requests\ShowRequest;
 use Zijinghua\Zbasement\Http\Requests\StoreRequest;
 
-class UserController extends BaseController
+class UserController extends BaseGroupController
 {
     public function updatePassword(UpdatePasswordRequest $request){
         $this->authorize('user',[]);
@@ -34,6 +34,17 @@ class UserController extends BaseController
 //        Log::info(123);
 
         $response=$this->execute($request,'index');
+        return $response;
+    }
+
+    //配置角色
+    public function assign(Request $request){
+        $response=$this->execute($request,'assign');
+        return $response;
+    }
+
+    public function add(Request $request){
+        $response=$this->execute($request,'add');
         return $response;
     }
 //    public function index(IndexRequest $request){

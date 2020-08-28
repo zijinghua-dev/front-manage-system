@@ -192,19 +192,19 @@ class UserService extends BaseGroupService implements UserServiceInterface
 //这是一个三元操作符，但在一个方法里完成：角色，用户，或者是角色，动作，对象类型
     //输入参数：group_id,id(用户)，role_id,authorize：0/1，删除/增加
     //调用本方法，需要角色在本组内，用户能操作本方法
-    public function authorize($parameters){
+    public function assign($parameters){
         //给用户添加/删除角色
         //添加角色，要求用户已经在组内
         $repository=$this->repository('groupUserRole');
         if($parameters['authorize']){
 
-            $repository->save(['role_id'=>$parameters['roleId'],'user_id'=>$parameters['id'],'group_id'=>$parameters['groupId']]);
+            $result=$repository->save(['role_id'=>$parameters['roleId'],'user_id'=>$parameters['id'],'group_id'=>$parameters['groupId']]);
 
         }else{
-            $repository->delete(['role_id'=>$parameters['roleId'],'user_id'=>$parameters['id'],'group_id'=>$parameters['groupId']]);
+            $result=$repository->delete(['role_id'=>$parameters['roleId'],'user_id'=>$parameters['id'],'group_id'=>$parameters['groupId']]);
 
             }
-            $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.success');
+            $messageResponse=$this->messageResponse($this->getSlug(),'authorize.submit.success',$result);
             return $messageResponse;
     }
 
