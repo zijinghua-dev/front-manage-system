@@ -68,7 +68,7 @@ class RoleService extends BaseGroupService implements RoleServiceInterface
 //    }
 
     //这是一个三元操作符，但在一个方法里完成：角色，用户，或者是角色，动作，对象类型
-    //authorize_user_id,id
+    //authorize_user_id,id(角色),authorize/deauthorize
     //调用本方法，需要角色在本组内，用户能操作本方法
     public function authorize($parameters){
         //给角色添加权限

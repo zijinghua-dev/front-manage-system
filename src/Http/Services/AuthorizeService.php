@@ -387,29 +387,30 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             return $result;
         }
 
-            //该用户单独拥有该对象吗？
-            $result = $this->checkPersonalOwnerPermission($parameters);
-            if (!isset($result)) {
-                return;//
-            } elseif ($result) {
-                return $result;
-            }
+        //该用户单独拥有该对象吗？
+        $result = $this->checkPersonalOwnerPermission($parameters);
+        if (!isset($result)) {
+            return;//
+        } elseif ($result) {
+            return $result;
+        }
 
-            //如果不是单独拥有，是用户间的分享吗？
-         $result = $this->checkPersonalGroupPermission($parameters);
-            if (!isset($result)) {
-                return;//
-            } elseif ($result) {
-                return $result;
-            }
+        //如果不是单独拥有，是用户间的分享吗？
+        $result = $this->checkPersonalGroupPermission($parameters);
+        if (!isset($result)) {
+            return;//
+        } elseif ($result) {
+            return $result;
+        }
 
-
+        //用户对当前组的index和show，是一个例外操作，只要用户在该组内拥有任意角色，无需group类型的授权，即可操作index和show
 //        //是对某个数据类型的操作吗？index之类则必须要有组角色，只有mine可以不经过授权
 //        if(!isset($parameters['groupId'])){
 //            return false;//必须要groupId
 //        }
         //检查在源组的权限。允许用户不在该组内，但操作对象一定要在该组内
         $result=$this->checkGroupRoleObjectPermissions($parameters);
+
         if(isset($result)&&$result){
             //检查在目的组的权限;如果是三元操作，必然要有objectId，可以没有有groupId，
             if($this->isTernaryAction($parameters['actionId'])) {
@@ -563,6 +564,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     //查看操作对象是不是在组内
     public function inGroup($parameters){
     //当前组有没有？不管子组
+        //如果是如果对象就是当前组，则默认包含
         $repository=Zsystem::repository('groupObject');
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         if(is_array($parameters['id'])){
@@ -790,17 +792,25 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $result;
     }
     public function checkGroupRoleObjectPermissions($parameters){
+        //是对当前组进行index和show操作吗？只要用户在该组内有角色，就可以操作；如果该组内没有角色，父组的角色要有明确的对组的操作权限
+        if($this->isCurrentGroup($parameters)){
+            $repository=Zsystem::repository('groupUserRole');
+            $result=$repository->index(['group_id'=>$parameters['groupId'],'user_id'=>$parameters['userId']]);
+            if($result->count()>0){
+                return $result;
+            }
+        }
         //首先找到该组的全部ownerparent，该组为最后一个
         $result=$this->checkParentPermissions($parameters['groupId'],$parameters['userId'],$parameters['datatypeId'],$parameters['actionId']);
-        if(!isset($result)){
-            return $result;
-        }
+//        if(!isset($result)){
+//            return $result;
+//        }
 
-        if(isset($parameters['destinationGroupId'])){
-            $result=$this->checkParentPermissions($parameters['destinationGroupId'],$parameters['userId'],
-                $parameters['datatypeId'],$parameters['destinationActionId']);
-            //目的组及其parent
-        }
+//        if(isset($parameters['destinationGroupId'])){
+//            $result=$this->checkParentPermissions($parameters['destinationGroupId'],$parameters['userId'],
+//                $parameters['datatypeId'],$parameters['destinationActionId']);
+//            //目的组及其parent
+//        }
         return $result;
     }
 

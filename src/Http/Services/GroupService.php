@@ -279,7 +279,10 @@ class GroupService extends BaseGroupService implements GroupServiceInterface
         return parent::store($data);
     }
 
+    //有角色的用户可以浏览自己所在的组index,show
     public function index($parameters){
+        //groupId为可选参数，如果没有groupId，则是该用户可操作的全部的group
+        //如果传递了角色名称，则进一步筛选
         if(isset($parameters['role'])){
             $repository=$this->repository('role');
             $roleId=$repository->key($parameters['role']);
