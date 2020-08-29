@@ -196,7 +196,7 @@ class UserService extends BaseGroupService implements UserServiceInterface
         //给用户添加/删除角色
         //添加角色，要求用户已经在组内
         $repository=$this->repository('groupUserRole');
-        if($parameters['authorize']){
+        if(isset($parameters['assign'])&&$parameters['assign']){
 
             $result=$repository->save(['role_id'=>$parameters['roleId'],'user_id'=>$parameters['id'],'group_id'=>$parameters['groupId']]);
 
