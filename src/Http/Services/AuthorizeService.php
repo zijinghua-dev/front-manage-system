@@ -348,7 +348,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             return true;
         }
         //这个动作依赖对象的属性吗？从组内移除，不依赖对象，不管这个对象自己是不是允许移除操作
-        if($this->isObjectAbility($parameters)){
+        if($result=$this->isObjectAbility($parameters)){
             //如果这个对象是被当前组owner,默认允许一切操作，但是，一旦设置了一条规则，就按规则执行
             //在当前组，该对象有对应的动作的属性吗？没有，报权限错误
             $result=$this->objectHasAbility($parameters);
@@ -360,7 +360,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
                 }
             }
         }
-
+        return $result;
 //        if(!$result){
             //如果objectId存在，应该是show之类的动作，不存在，应该是index之类的动作
             //如果group_user_object_permissions表里没有数据，需要看一看该用户的组角色是不是拥有权限
@@ -868,7 +868,10 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $search['search'][]=['field'=>'id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'depend_object','value'=>1,'filter'=>'=','algorithm'=>'and'];
         $result=$repository->fetch($search);
-        return $result;
+        if(!isset($result)){
+            return false;
+        }
+        return true;
     }
 
     //一个对象在一个容器里，会给予动作限制，可以做哪些动作，不能做哪些动作

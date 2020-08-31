@@ -46,6 +46,8 @@ class OrganizeController extends BaseGroupController
     public function index(IndexRequest $request){
         return $this->execute($request,'index');
     }
-
+    public function search(Request $request){
+        return $this->execute($request,'search');
+    }
 
 }

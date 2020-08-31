@@ -276,7 +276,7 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
         try {
             $result=$repository->store($data);
             unset($data);
-            $data=Arr::only($parameters,['userId','scheduleBegin','scheduleEnd','groupId','datatypeId']);
+            $data=Arr::only($parameters,['userId','groupId','datatypeId']);
             $data['objectId']=$result->id;
             $group= parent::store($data);//保存group和family
             //重新将获得的groupID保存到organize里
@@ -284,7 +284,7 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
             $result=$repository->update(['id'=>$result->id,'group_id'=>$group->id]);
             DB::commit();
 
-            $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.success',$result);
+            $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.success');
             return $messageResponse;
         } catch (Exception $e) {
             DB::rollback();

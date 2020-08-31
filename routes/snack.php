@@ -16,7 +16,7 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
         Route::post('/store', 'UserController@store');
     });
 
-    Route::group(['prefix' => 'group'], function () {
+    Route::group(['prefix' => 'organize'], function () {
         Route::get('/{id}', 'OrganizeController@show');
     });
 
@@ -28,10 +28,8 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
         });
 
         Route::group(['prefix' => 'organize'], function () {
-
-            Route::post('/index', 'OrganizeController@index');
-            Route::post('/fetch', 'OrganizeController@fetch');
             Route::post('/search', 'OrganizeController@search');
+
             Route::post('/mine', 'OrganizeController@mine');
         });
 
@@ -75,6 +73,8 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::post('/shrink', 'OrganizeController@shrink');//减少组的属性，不允许它装载某个类型的对象
             Route::post('/share', 'OrganizeController@share');//减少组的属性，不允许它装载某个类型的对象
             Route::post('/expand', 'OrganizeController@expand');//给组增加属性，允许它装载更多类型的对象
+            Route::post('/index', 'OrganizeController@index');
+            Route::post('/fetch', 'OrganizeController@fetch');
         });
 
         Route::group(['prefix' => 'datatype'], function () {
