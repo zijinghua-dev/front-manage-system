@@ -17,22 +17,22 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
     });
 
     Route::group(['prefix' => 'group'], function () {
-        Route::get('/{id}', 'GroupController@show');
+        Route::get('/{id}', 'OrganizeController@show');
     });
 
 
     Route::group(['middleware'=>['auth:api','zUserId']], function () {
 
         Route::group(['prefix' => 'menu'], function () {
-            Route::post('/', 'GroupController@index');
+            Route::post('/', 'OrganizeController@index');
         });
 
-        Route::group(['prefix' => 'group'], function () {
+        Route::group(['prefix' => 'organize'], function () {
 
-            Route::post('/index', 'GroupController@index');
-            Route::post('/fetch', 'GroupController@fetch');
-            Route::post('/search', 'GroupController@search');
-            Route::post('/mine', 'GroupController@mine');
+            Route::post('/index', 'OrganizeController@index');
+            Route::post('/fetch', 'OrganizeController@fetch');
+            Route::post('/search', 'OrganizeController@search');
+            Route::post('/mine', 'OrganizeController@mine');
         });
 
         Route::group(['prefix' => 'datatype',], function () {
@@ -65,16 +65,16 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
 
         });
 
-        Route::group(['prefix' => 'group'], function () {
-            Route::post('/', 'GroupController@store');
-            Route::put('/', 'GroupController@update');
+        Route::group(['prefix' => 'organize'], function () {
+            Route::post('/', 'OrganizeController@store');
+            Route::put('/', 'OrganizeController@update');
 
-            Route::post('/delete', 'GroupController@delete');//批量删除，可以传array
-            Route::post('/append', 'GroupController@append');//向组内添加对象，可以传array
-            Route::post('/clear', 'GroupController@clear');//从组内移除对象，并不删除，可以传array
-            Route::post('/shrink', 'GroupController@shrink');//减少组的属性，不允许它装载某个类型的对象
-            Route::post('/share', 'GroupController@share');//减少组的属性，不允许它装载某个类型的对象
-            Route::post('/expand', 'GroupController@expand');//给组增加属性，允许它装载更多类型的对象
+            Route::post('/delete', 'OrganizeController@delete');//批量删除，可以传array
+            Route::post('/append', 'OrganizeController@append');//向组内添加对象，可以传array
+            Route::post('/clear', 'OrganizeController@clear');//从组内移除对象，并不删除，可以传array
+            Route::post('/shrink', 'OrganizeController@shrink');//减少组的属性，不允许它装载某个类型的对象
+            Route::post('/share', 'OrganizeController@share');//减少组的属性，不允许它装载某个类型的对象
+            Route::post('/expand', 'OrganizeController@expand');//给组增加属性，允许它装载更多类型的对象
         });
 
         Route::group(['prefix' => 'datatype'], function () {

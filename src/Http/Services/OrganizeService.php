@@ -4,12 +4,32 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+
 use Zijinghua\Zbasement\Facades\Zsystem;
 
-class GroupService extends BaseGroupService
+
+use Zijinghua\Zvoyager\Http\Contracts\OrganizeServiceInterface;
+
+class OrganizeService extends GroupService implements OrganizeServiceInterface
 {
+    private $datatypeId;//group本身也是一种datatype，这个ID
+    public function __construct()
+    {
+        $repository=Zsystem::repository('datatype');
+        $parameter['search'][]=['field'=>'slug','value'=>'groups'];
+        $datatype=$repository->fetch($parameter);
+        if(isset($datatype)){
+            $this->datatypeId=$datatype->id;
+        }
+    }
+
+//    public function inGroup($groupId,$userId,$datatypeId,$objectId){
+//
+//    }
+
     public function parent($parentId){
         $repository=Zsystem::repository('group');
         $parameter['search'][]=['field'=>'id','value'=>$parentId];
@@ -231,8 +251,8 @@ class GroupService extends BaseGroupService
             //删除作为组
             DB::commit();
 
-            $messageResponse=$this->messageResponse($this->getSlug(),'delete.submit.success');
-            return $messageResponse;
+                $messageResponse=$this->messageResponse($this->getSlug(),'delete.submit.success');
+                return $messageResponse;
         } catch (Exception $e) {
             DB::rollback();
 //            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
@@ -242,98 +262,93 @@ class GroupService extends BaseGroupService
 
     }
 
-    //返回创建的group记录
     public function store($parameters)
     {
-        if($this->getSlug()!='group'){
-            $this->setSlug('group');
+        $data['name'] = $parameters['name'];
+        if(isset($parameters['picture'])){
+            $data['picture']=$parameters['picture'];
         }
-        $repository=$this->repository('group');
-        unset($data);
-        $data['datatype_id']=$parameters['datatypeId'];
-        $data['object_id']=$parameters['objectId'];
-        if(isset($parameters['userId'])){
-            $data['owner_id']=$parameters['userId'];
+        if(isset($parameters['describe'])){
+            $data['describe']=$parameters['describe'];
         }
-        if(isset($parameters['groupId'])){
-            $data['owner_group_id']=$parameters['groupId'];
-        }
-        if(isset($parameters['scheduleBegin'])){
-            $data['schedule_begin']=$parameters['scheduleBegin'];
-        }
-        if(isset($parameters['scheduleEnd'])){
-            $data['schedule_end']=$parameters['scheduleEnd'];
-        }
-        $result=$repository->store($data);
-        if(isset($parameters['groupId'])){
-            unset($data);
-            $data=Arr::only($parameters,['datatypeId','objectId','groupId']);
-            $data['childGroupId']=$result->id;
-            $this->relationSave($data);
-        }
-        //
-        return $result;
-    }
-
-    protected function relationSave($parameters){
-        //如果有groupid，意味着有父组，还要再groupObject把本组放进父组里
-
-            $repository=$this->repository('groupObject');
-            unset($data);
-            $data['group_id']=$parameters['groupId'];
-            $data['datatype_id']=$parameters['datatypeId'];
-            $data['object_id']=$parameters['objectId'];
-            $data['child_group_id']=$parameters['childGroupId'];
-            $data['owned']=1;
+        $repository=$this->repository('organize');
+        DB::beginTransaction();
+        try {
             $result=$repository->store($data);
+            unset($data);
+            $data=Arr::only($parameters,['userId','scheduleBegin','scheduleEnd','groupId','datatypeId']);
+            $data['objectId']=$result->id;
+            $group= parent::store($data);//保存group和family
+            //重新将获得的groupID保存到organize里
+            $repository=$this->repository('organize');
+            $result=$repository->update(['id'=>$result->id,'group_id'=>$group->id]);
+            DB::commit();
 
-        //groupParent和groupFamily是两个加速表，一个记录当前组的父组，一个记录当前组的子组
-        $repository=$this->repository('groupParent');
-        unset($data);
-        $data['parent_id']=$parameters['groupId'];
-        $data['group_id']=$parameters['objectId'];
-        $result=$repository->store($data);
-        $repository=$this->repository('groupFamily');
-        unset($data);
-        $data['group_id']=$parameters['groupId'];
-        $data['child_id']=$parameters['objectId'];
-        $result=$repository->store($data);
-        return $result;
-    }
-    //有角色的用户可以浏览自己所在的组index,show
-    public function index($parameters){
-        //groupId为可选参数，如果没有groupId，则是该用户可操作的全部的group
-        //如果传递了角色名称，则进一步筛选
-        if(isset($parameters['role'])){
-            $repository=$this->repository('role');
-            $roleId=$repository->key($parameters['role']);
-
-            if(isset($roleId)){
-                $search['search'][]=['field'=>'role_id','value'=>$roleId,'filter'=>'=','algorithm'=>'and'];
-            }
-        }
-        $repository=$this->repository('groupUserRole');
-        $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-
-        $result=$repository->index($search);
-        if(!isset($result)){
-            $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
+            $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.success',$result);
             return $messageResponse;
+        } catch (Exception $e) {
+            DB::rollback();
+//            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
+        }
+        $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.failed');
+        return $messageResponse;
         }
 
-        $ids=$result->pluck('group_id')->toArray();
-        $repository=$this->repository('group');
-        unset($search);
-        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
-        $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
-        $result=$repository->index($search);
 
-        $ids=$result->pluck('object_id')->toArray();
-        $repository=$this->repository($parameters['slug']);
-        unset($search);
-        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
-        $result=$repository->index($search);
-        $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success',$result);
-        return $messageResponse;
-    }
+
+
+
+//    public function expand($parameters){
+//        $model=$this->model('groupDatatype');
+//        $data=[];
+//        if(is_array($parameters['datatypeId'])){
+//            foreach ($parameters['datatypeId'] as $key=>$datatypeId){
+//                $data[]=['group_id'=>$parameters['groupId'],'datatype_id'=>$datatypeId];
+//            }
+//        }else{
+//            $data[]=['group_id'=>$parameters['groupId'],'datatype_id'=>$parameters['datatypeId']];
+//        }
+//        try {
+//            return $model->insert($data);
+//        } catch (QueryException $e) {
+//            $errorCode = $e->errorInfo[1];
+//            if($errorCode == 1062){
+//                return;
+//            }else{
+//                throw $e;
+//            }
+//        }
+//        //这里会有数据库唯一索引冲突报错
+//    }
+
+//    //当删除一个组的属性时，各个关联表都要去除对应记录
+//    public function shrink($parameters){
+//        //groupId,datatypeId转为数据库字段名
+//        $data['group_id']=$parameters['groupId'];
+//        $data['datatype_id']=$parameters['datatypeId'];
+//        DB::beginTransaction();
+//        try {
+//            $repository=Zsystem::repository('groupDatatype');
+//            $num=$repository->remove($data);
+//            ////删除group_object
+//            $repository=Zsystem::repository('groupObject');
+//            $num=$num+$repository->remove($data);
+//            //删除group_object_permission
+//            $repository=Zsystem::repository('groupObjectPermission');
+//            $num=$num+$repository->remove($data);
+//            //删除group_role_permissions
+//            $repository=Zsystem::repository('groupRolePermission');
+//            $num=$num+$repository->remove($data);
+//            //删除group_user_permissions
+//            $repository=Zsystem::repository('groupUserPermission');
+//            $num=$num+$repository->remove($data);
+//
+//            DB::commit();
+//            return $num;
+//        } catch (Exception $e) {
+//            DB::rollback();
+//            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
+//        }
+//    }
+
 }
