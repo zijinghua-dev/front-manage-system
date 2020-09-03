@@ -379,7 +379,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         //非平台owner和管理员，没有group_id，只能查看个人own和分享的对象：mine，或者是一对一
         //非平台owner和管理员，有object_id，先检查是不是单独拥有的对象，单独拥有，可以操作一切非三元动作
 
-        //是公共组的公开操作吗？
+        //是公共组的操作吗？每个用户默认是公共组的user角色
         $result=$this->checkPublicAction($parameters);
         if(!isset($result)){
             return ;

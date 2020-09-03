@@ -242,7 +242,7 @@ class GroupService extends BaseGroupService
 
     }
 
-    //返回创建的group记录
+    //返回创建的group记录,如果有父组，还要在groupObject中创建一条记录
     public function store($parameters)
     {
         if($this->getSlug()!='group'){
@@ -369,4 +369,9 @@ class GroupService extends BaseGroupService
         return $messageResponse;
     }
 
+    //更改组的容量属性，可以装载哪些类型的对象
+    public function tolerance($parameters){
+        //输入参数ID(groupId),datatypeId,add:-1/1，增加或减少
+        //最高不能超过父组的能力
+    }
 }

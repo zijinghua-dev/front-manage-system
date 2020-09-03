@@ -16,6 +16,7 @@ class BaseGroupService extends BaseService
     //不包括：组owner的
     public function mine($parameters){
         //首先把别人分享，或者自己分享出来的对象取出
+
         $objectIds=[];
         $repository=$this->repository('guop');
         $search['paginate']=0;

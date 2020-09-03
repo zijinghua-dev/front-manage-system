@@ -262,8 +262,7 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
 
     }
 
-    public function store($parameters)
-    {
+    public function create($parameters){
         $data['name'] = $parameters['name'];
         if(isset($parameters['picture'])){
             $data['picture']=$parameters['picture'];
@@ -272,16 +271,22 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
             $data['describe']=$parameters['describe'];
         }
         $repository=$this->repository('organize');
+
+        $result=$repository->store($data);
+        unset($data);
+        $data=Arr::only($parameters,['userId','groupId','datatypeId']);
+        $data['objectId']=$result->id;
+        $group= parent::store($data);//保存group和family
+        //重新将获得的groupID保存到organize里
+        $repository=$this->repository('organize');
+        $result=$repository->update(['id'=>$result->id,'group_id'=>$group->id]);
+    }
+
+    public function store($parameters)
+    {
         DB::beginTransaction();
         try {
-            $result=$repository->store($data);
-            unset($data);
-            $data=Arr::only($parameters,['userId','groupId','datatypeId']);
-            $data['objectId']=$result->id;
-            $group= parent::store($data);//保存group和family
-            //重新将获得的groupID保存到organize里
-            $repository=$this->repository('organize');
-            $result=$repository->update(['id'=>$result->id,'group_id'=>$group->id]);
+            $result=$this->create($parameters);
             DB::commit();
 
             $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.success');
@@ -292,7 +297,7 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
         }
         $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.failed');
         return $messageResponse;
-        }
+    }
 
 
 
