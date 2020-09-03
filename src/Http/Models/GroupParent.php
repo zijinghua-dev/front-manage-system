@@ -10,4 +10,5 @@ use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
 class GroupParent extends BaseModel implements GroupParentModelInterface
 {
     protected $table='group_parents';
+    protected $fillable=['parent_id','group_id'];
 }

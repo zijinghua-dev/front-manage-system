@@ -10,81 +10,28 @@ use Zijinghua\Zbasement\Http\Services\BaseService;
 
 class BaseGroupService extends BaseService
 {
-    //我的数据对象
+    //我的数据对象，包括
+    //1、自己创建的
+    //2、别人分享给我的
+    //不包括：组owner的
     public function mine($parameters){
-        //找到当前用户的所有组，group_objects是组直接表，一个组里own了哪些对象；group_user_roles是间接表
-        //user_objects是个人直接表，own了哪些对象
-        //group_user_object_permissions是在组里一对一授权
-        //首先看group_objects
-        $ids=[];
-        $repository=$this->repository('groupObject');
+        //首先把别人分享，或者自己分享出来的对象取出
+        $objectIds=[];
+        $repository=$this->repository('guop');
+        $search['paginate']=0;
         $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
         if($result->count()>0){
-            $ids=$result->pluck('object_id')->toArray();//组own的，和分享到组的都在这里
+            $objectIds=$result->pluck('object_id')->toArray();
         }
-        //group_user_object_permissions有数据吗?用户并不拥有某个对象，但可能拥有某种权限
-        $repository=$this->repository('guop');
-        $result=$repository->index($search);
-        if($result->count()>0){
-            $ids=array_merge($ids,$result->pluck('object_id')->toArray());//个人分享的在这里
-        }
-        //再看这个用户own了哪些对象
-        $repository=$this->repository($this->getSlug());
+        //然后把个人创建的对象，以及分享的对象合并取出
+        $repository=$this->repositoryById($parameters['datatypeId']);
         unset($search);
-        $search['search'][]=['field'=>'owner_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-        $result=$repository->index($search);
-        if($result->count()>0){
-            $ids=array_merge($ids,$result->pluck('id')->toArray());
-        }
-
-        //最后看这个用户在哪些组里有角色
-        $repository=$this->repository('groupUserRole');
-        unset($search);
-        $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-        $result=$repository->index($search);
-        if($result->count()>0){
-            $groupIds=$result->pluck('group_id')->toArray();
-            if($this->getSlug()=='group'){
-                $ids= array_merge($ids,$groupIds);
-            }
-            $roleIds=$result->pluck('role_id')->toArray();
-        }
-
-        //这些角色可以操作本对象类型吗？
-        if(isset($groupIds)){
-            $repository=$this->repository('groupRolePermission');
-            unset($search);
-            $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
-            $search['search'][]=['field'=>'role_id','value'=>$roleIds,'filter'=>'in','algorithm'=>'and'];
-            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
-            $result=$repository->index($search);
-            if($result->count()>0){
-                $groupIds=$result->pluck('group_id')->toArray();
-            }
-            //这些组里有这个类型的对象吗？
-            $repository=$this->repository('groupObject');
-            unset($search);
-            $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
-            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
-            $result=$repository->index($search);
-            if($result->count()>0){
-                $objectIds=$result->pluck('object_id')->toArray();
-                $ids= array_merge($ids,$objectIds);
-            }
-        }
-
-
-        if(emptyObjectOrArray($ids)){
-            $messageResponse=$this->messageResponse($this->getSlug(),'mine.submit.success');
-            return $messageResponse;
-        }
-        $repository=$this->repository($this->getSlug());
-        unset($search);
-        $search['search'][]=['field'=>'id','value'=>array_unique($ids),'filter'=>'in','algorithm'=>'and'];
-        $result=$repository->index($search);
-        $messageResponse=$this->messageResponse($this->getSlug(),'mine.submit.success',$result);
+        $search['search'][]=['field'=>'owner_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'or'];
+        $search['search'][]=['field'=>'id','value'=>$objectIds,'filter'=>'in','algorithm'=>'or'];
+        $dataset=$repository->index($search);
+        $messageResponse=$this->messageResponse($this->getSlug(),'mine.submit.success',$dataset);
         return $messageResponse;
     }
 
@@ -156,13 +103,18 @@ class BaseGroupService extends BaseService
         $groupId=$parameters['groupId'];
         $datatypeId=$parameters['datatypeId'];
         $repository=$this->repository('groupObject');
-        $dataSet=$repository->index(['group_id'=>$groupId,'datatype_id'=>$datatypeId]);
+        $search['paginate']=0;//0表示获取全部数据，不分页
+        $search['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
+        $dataSet=$repository->index($search);
         if($dataSet->count()==0){
             $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success');
             return $messageResponse;
         }
         $ids=$dataSet->pluck('object_id')->toArray();
         $repository=$this->repository($this->getSlug());
+        unset($search);
+//        $search['paginate']=0;//0表示获取全部数据，不分页
         $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
         $dataSet=$repository->index($search);
         if($dataSet->count()==0){
@@ -176,6 +128,23 @@ class BaseGroupService extends BaseService
 //        $code='zbasement.code.'.$this->slug.'.index.success';
         $resource=$this->getResource($this->getSlug(),'index');
         $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success', $dataSet,$resource);
+        return $messageResponse;
+    }
+
+    public function store($parameters)
+    {
+        $parameters['owner_group_id']=$parameters['groupId'];
+        $parameters['owner_id']=$parameters['userId'];
+        return parent::store($parameters);
+    }
+
+    //把数据对象添加到组里
+    public function add($parameters)
+    {
+        $repository=$this->repository('groupObject');
+        $result=$repository->save(['group_id'=>$parameters['groupId'],'datatype_id'=>$parameters['datatypeId'],
+            'object_id'=>$parameters['id']]);
+        $messageResponse=$this->messageResponse($this->getSlug(),'add.submit.success', $result);
         return $messageResponse;
     }
 }

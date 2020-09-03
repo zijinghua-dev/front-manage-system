@@ -2,13 +2,18 @@
 namespace Zijinghua\Zvoyager;
 
 
+use Zijinghua\Zvoyager\Http\Contracts\ActionServiceInterface;
+use Zijinghua\Zvoyager\Http\Contracts\DatatypeServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupFamilyModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
 //use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Contracts\GuopModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GurModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\MenuServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ObjectActionModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\OrganizeModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\OrganizeServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleServiceInterface;
@@ -25,6 +30,7 @@ use Zijinghua\Zvoyager\Http\Models\GroupUserRole;
 use Zijinghua\Zvoyager\Http\Models\ObjectAction;
 use Zijinghua\Zvoyager\Http\Models\GroupRolePermission;
 use Zijinghua\Zvoyager\Http\Models\GroupUserObjectPermission;
+use Zijinghua\Zvoyager\Http\Models\Organize;
 use Zijinghua\Zvoyager\Http\Models\Role;
 use Zijinghua\Zvoyager\Http\Repositories\ActionRepository;
 use Zijinghua\Zbasement\Http\Repositories\Contracts\UserRepositoryInterface;
@@ -56,12 +62,15 @@ use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 use Zijinghua\Zbasement\Http\Models\RestfulUser;
 use Zijinghua\Zbasement\Http\Repositories\RestfulUserRepository;
 use Zijinghua\Zvoyager\Http\Contracts\UserServiceInterface;
+use Zijinghua\Zvoyager\Http\Services\ActionService;
 use Zijinghua\Zvoyager\Http\Services\AuthorizeService;
 use Zijinghua\Zvoyager\Http\Services\AuthService;
 use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
 
-use Zijinghua\Zvoyager\Http\Services\GroupService;
+use Zijinghua\Zvoyager\Http\Services\DatatypeService;
+use Zijinghua\Zvoyager\Http\Services\OrganizeService;
+use Zijinghua\Zvoyager\Http\Services\MenuService;
 use Zijinghua\Zvoyager\Http\Services\ParameterService;
 use Zijinghua\Zvoyager\Http\Services\RoleService;
 use Zijinghua\Zvoyager\Http\Services\UserService;
@@ -118,9 +127,14 @@ class ZServiceProvider extends BaseServiceProvider
             return new GroupRepository();
         });
 
-        $loader->alias('groupService', GroupServiceInterface::class);
-        $this->app->singleton('groupService', function () {
-            return new GroupService();
+        $loader->alias('organizeModel', OrganizeModelInterface::class);
+        $this->app->singleton('organizeModel', function () {
+            return new Organize();
+        });
+
+        $loader->alias('organizeService', OrganizeServiceInterface::class);
+        $this->app->singleton('organizeService', function () {
+            return new OrganizeService();
         });
 
         $loader->alias('datatypeModel', DatatypeModelInterface::class);
@@ -208,6 +222,21 @@ class ZServiceProvider extends BaseServiceProvider
         $this->app->bind('roleService', function () {
             return new RoleService();
         });
+
+        $loader->alias('datatypeService', DatatypeServiceInterface::class);
+        $this->app->bind('datatypeService', function () {
+            return new DatatypeService();
+        });
+
+        $loader->alias('actionService', ActionServiceInterface::class);
+        $this->app->bind('actionService', function () {
+            return new ActionService();
+        });
+
+        $loader->alias('menuService', MenuServiceInterface::class);
+        $this->app->bind('menuService', function () {
+            return new MenuService();
+        });
     }
     public function boot(Router $router, Dispatcher $event)
     {
@@ -258,6 +287,7 @@ class ZServiceProvider extends BaseServiceProvider
     {
         $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code/auth.php', 'zbasement.code.auth');
         $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code/user.php', 'zbasement.code.user');
+        $this->mergeConfigFrom( $this->getPublishablePath(). '/configs/code/add.php', 'zbasement.code.add');
 //        $this->mergeConfigFrom( $this->getPublishablePath().'/configs/fields.php', 'zbasement.fields');
         $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation/rules/auth.php', 'zbasement.validation.rules.auth');
         $this->mergeConfigFrom( $this->getPublishablePath().'/configs/validation/rules/user.php', 'zbasement.validation.rules.user');

@@ -12,23 +12,23 @@ use Zijinghua\Zvoyager\Http\Contracts\AuthorizeServiceInterface;
 
 class AuthorizeService extends BaseService implements AuthorizeServiceInterface
 {
-    protected function groupPermissionParameter($userId,$groupId){
-        //输出一个数组，便于eloquent和cache/redis都能够使用
-        //如果是redis，他会自动序列化，并不需要我们进行处理
-    }
+//    protected function groupPermissionParameter($userId,$groupId){
+//        //输出一个数组，便于eloquent和cache/redis都能够使用
+//        //如果是redis，他会自动序列化，并不需要我们进行处理
+//    }
 
     //查找该组的父组，同时查看该用户是否在父组内
     //组的父组是不能有中断的
 
-    protected function parentSearch($userId,$groupId){
-        $parameter['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
-        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
-        $repository=Zsystem::repository('groupDataType');
-        $parent=$repository->fetch($parameter);
-        if(isset($parent)){
-            return $parent->id;
-        }
-    }
+//    protected function parentSearch($userId,$groupId){
+//        $parameter['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
+//        $parameter['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+//        $repository=Zsystem::repository('groupDataType');
+//        $parent=$repository->fetch($parameter);
+//        if(isset($parent)){
+//            return $parent->id;
+//        }
+//    }
 
     protected function addPermission($parentPermissions,$permissions){
         foreach ($parentPermissions as $key=>$item){
@@ -52,13 +52,19 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     public function checkPlatformOwnerPermission($parameters){
         //只要是平台owner组成员，或者是平台owner组的owner，都可以授权
         //先找到平台owner组
+        return $this->isPlatformOwner($parameters['userId']);
+    }
+
+    public function isPlatformOwner($userId){
+        //只要是平台owner组成员，或者是平台owner组的owner，都可以授权
+        //先找到平台owner组
         $group=$this->getPlatformOwnerGroup();
         if(!isset($group)){
             return ;//出错啦
         }
 
         //看看是不是平台owner组的owner
-        if($group->owner_id==$parameters['userId']){
+        if($group->owner_id==$userId){
             return true;
         }
         //如果不是平台owner组的owner，看看是不是平台owner组的成员
@@ -72,19 +78,25 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             return ;//出错啦
         }
         $result=$this->inGroup(['datatypeId'=>$datatypeId,'datatypeSlug'=>'user',
-            'id'=>$parameters['userId'],'groupId'=>$group->id]);
-        return $result;
+            'id'=>$userId,'groupId'=>$group->id]);
+        if(!isset($result)){
+            return false;//该用户不是admin组成员
+        }
+        if(!$result){
+            return false;//该用户不是admin组成员
+        }
+        return true;
     }
 
-    public function checkPlatformAdminPermission($parameters){
-    //这个方法需要在checkOwnerPermission之后使用，否则，即便是平台owner，也有可能没有权限进入任何地方
+    public function isPlatformAdmin($userId){
+        //这个方法需要在checkOwnerPermission之后使用，否则，即便是平台owner，也有可能没有权限进入任何地方
         //先找到平台管理组
         $group=$this->getPlatformAdminGroup();
         if(!isset($group)){
             return ;//出错啦
         }
         //检查用户是否是平台管理组的owner
-        if($group->owner_id==$parameters['userId']){
+        if($group->owner_id==$userId){
             return true;
         }
         //用户是否是平台管理组的成员
@@ -96,13 +108,26 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         if($datatypeId==0){
             return ;//出错啦
         }
-        $result=$this->inGroup(['datatypeSlug'=>'user','id'=>$parameters['userId'],
+        $result=$this->inGroup(['datatypeSlug'=>'user','id'=>$userId,
             'datatypeId'=>$datatypeId,'groupId'=>$group->id]);
         if(!isset($result)){
             return false;//该用户不是admin组成员
         }
         if(!$result){
             return false;//该用户不是admin组成员
+        }
+        return true;
+    }
+
+    public function checkPlatformAdminPermission($parameters){
+    //这个方法需要在checkOwnerPermission之后使用，否则，即便是平台owner，也有可能没有权限进入任何地方
+        //先找到平台管理组
+        $result=$this->isPlatformAdmin($parameters['userId']);
+        if(!isset($result)){
+            return ;//出错啦
+        }
+        if(!$result){
+            return false;
         }
         //现在排除操作对象是否是平台owner组的
         $ownerGroup=$this->getPlatformOwnerGroup();
@@ -116,7 +141,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return true;
     }
 
-    public function isPowerOwner($userId,$datatypeSlug,$objectId){
+    public function hasOwnerPower($userId,$datatypeSlug,$objectId){
         //当前对象是不是仅仅被该用户拥有？并没有被任何一个组拥有
         //该用户是否通过子组拥有该对象
         //首先获取该对象，拿到owner和owner组
@@ -207,131 +232,209 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     }
 
     //delete方法，如果不是平台owner和管理员，数据对象需要被组owner有删除权限的用户，或者是个人owner删除
-    public function checkGroupPermission($parameters){
-        //如果不是该用户单独拥有，也不是公共操作，检查有没有单独为该用户分配该对象的权限？group_user_object_permissions.
-        $result=$this->checkGuop($parameters);
-        if($result){
-            return true;
-        }
-        //group_user_object_permissions表里没有数据，而groupId又为null，肯定该用户是没有权限的了
-        if(!isset($parameters['groupId'])){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-            return false;//
-        }
-
-        //操作对象是不是就是当前组?还是当前组内的一个数据对象
-        $result=$this->isCurrentGroup($parameters);
-        if(!isset($result)){
-            return $result;
-        }
-        if(!$result){
-            //如果objectId存在，应该是show之类的动作，不存在，应该是index之类的动作
-            //如果group_user_object_permissions表里没有数据，需要看一看该用户的组角色是不是拥有权限
-            //如果groupId不为null，除了添加到组的动作，该对象都必须在该组内（子组内）。如果不在，要报参数错误，因为提交前需要确认在组内？
-            //如果有操作对象，做两个检查，第一，在不在当前组，第二，在当前组里有没有操作属性
-            //不管有没有操作对象，都要做一个检查，组里面能否容纳这个类型的对象
-            if(isset($parameters['id'])){
-                $result=$this->inGroup($parameters);
-                if(!$result){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-                    return $result;//
-                }
-                //这个动作依赖对象的属性吗？从组内移除，不依赖对象，
-                if($this->isObjectAbility($parameters)){
-                    //如果这个对象是被当前组owner,默认允许一切操作，但是，一旦设置了一条规则，就按规则执行
-                    //在当前组，该对象有对应的动作的属性吗？没有，报权限错误
-                    $result=$this->objectHasAbility($parameters);
-                    if(isset($result)) {
-
-                        if (!$result) {
-//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-                            return $result;//
-                        }
-                    }
-                }
-            }
-            //该组有容纳该类型对象的属性吗？没有，报权限错误
-            $result=$this->groupHasDatatype($parameters);
-            if(!$result){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-                return $result;//
-            }
-        }
-
-        //找出用户的角色在当前组内拥有的最高权限
-        $result=$this->checkGroupRoleObjectPermissions($parameters);
-
-        if($result){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
-            return true;//
-        }else{
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-            return $result;//
-        }
-    }
+//    public function checkGroupPermission($parameters){
+//        //如果不是该用户单独拥有，也不是公共操作，检查有没有单独为该用户分配该对象的权限？group_user_object_permissions.
+//        $result=$this->checkGuop($parameters);
+//        if($result){
+//            return true;
+//        }
+//
+//        //操作对象是不是就是当前组?还是当前组内的一个数据对象
+//        //如果是对当前组进行操作
+//        $result=$this->isCurrentGroup($parameters);
+//        if(!isset($result)){
+//            return $result;
+//        }
+//        if(!$result){
+//            //如果objectId存在，应该是show之类的动作，不存在，应该是index之类的动作
+//            //如果group_user_object_permissions表里没有数据，需要看一看该用户的组角色是不是拥有权限
+//            //如果groupId不为null，除了添加到组的动作，该对象都必须在该组内（子组内）。如果不在，要报参数错误，因为提交前需要确认在组内？
+//            //如果有操作对象，做两个检查，第一，在不在当前组，第二，在当前组里有没有操作属性
+//            //不管有没有操作对象，都要做一个检查，组里面能否容纳这个类型的对象
+//            if(isset($parameters['id'])){
+//                $result=$this->inGroup($parameters);
+//                if(!$result){
+////            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+//                    return $result;//
+//                }
+//                //这个动作依赖对象的属性吗？从组内移除，不依赖对象，
+//                if($this->isObjectAbility($parameters)){
+//                    //如果这个对象是被当前组owner,默认允许一切操作，但是，一旦设置了一条规则，就按规则执行
+//                    //在当前组，该对象有对应的动作的属性吗？没有，报权限错误
+//                    $result=$this->objectHasAbility($parameters);
+//                    if(isset($result)) {
+//
+//                        if (!$result) {
+////                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+//                            return $result;//
+//                        }
+//                    }
+//                }
+//            }
+//            //该组有容纳该类型对象的属性吗？没有，报权限错误
+//            $result=$this->groupHasDatatype($parameters);
+//            if(!$result){
+////            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+//                return $result;//
+//            }
+//        }
+//
+//        //找出用户的角色在当前组内拥有的最高权限
+//        $result=$this->checkGroupRoleObjectPermissions($parameters);
+//
+//        if($result){
+////            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
+//            return true;//
+//        }else{
+////            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
+//            return $result;//
+//        }
+//    }
 
     //返回null，出错了，返回false，没有找到
+    //我自己拥有的对象，与组无关的操作
     public function checkPersonalOwnerPermission($parameters){
         //如果没有id，证明不是一对一
         if(!isset($parameters['id'])){
             return false;
         }
-        $result=$this->isPowerOwner($parameters['userId'],$parameters['slug'],$parameters['id']);
+        $result=$this->hasOwnerPower($parameters['userId'],$parameters['slug'],$parameters['id']);
         if($result){
             //如果不在组里操作，也不是三元操作符，那就可以操作了
             if(!isset($parameters['groupId'])) {
-                if(!$this->isTernaryAction($parameters['actionId'])){
+                if (!$this->isTernaryAction($parameters['actionId'])) {
                     return true;
-                }else{
-                    //如果是三元操作，检查目的组权限
-                    $result=$this->checkGroupPermission(['groupId'=>$parameters['destinationGroupId'],
-                        'userId'=>$parameters['userId'],'datatypeId'=>$parameters['datatypeId'],'slug'=>$parameters['slug'],
-                        'actionId'=>$parameters['destinationActionId']]);
-                    return $result;
                 }
-            }else{
-                return false;//不允许在组里操作个人owner的对象，只能把个人的对象发布到组里（从组外到组内）
             }
         }
         return $result;
+    }
+
+    //如果用户不拥有这个对象，看看是不是一对一分配了操作的权限
+    //不需要groupId的操作，mine和index之类，mine 无需权限，index由group验证；个人之间分享也无需groupID
+    public function checkPersonalGroupPermission($parameters){
+        //如果没有id，证明不是一对一
+        if(!isset($parameters['id'])){
+            return false;
+        }
+        if(isset($parameters['groupId'])) {
+
+            //该组有容纳该类型对象的属性吗？没有，报权限错误
+            $result = $this->groupHasDatatype($parameters);
+            if (!$result) {
+//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+                return $result;//
+            }
+
+            //操作对象是不是就是当前组?还是当前组内的一个数据对象
+            //如果是对当前组进行操作，交给下一个方法做验证，这里跳过
+            $result = $this->isCurrentGroup($parameters);
+            if (!isset($result)) {
+                return ;
+            }
+            if (!$result) {
+                //当前操作对象在本组内吗？如果不是本组的，就结束了
+                $result = $this->inGroup($parameters);
+                if (!$result) {
+//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+                    return $result;//
+                }
+            }
+        }
+
+        //如果不是该用户单独拥有，也不是公共操作，检查有没有单独为该用户在本组中分配该对象的权限？group_user_object_permissions.
+        $result = $this->checkGuop($parameters);
+        if ($result) {
+            return true;
+        }
+        //这个动作依赖对象的属性吗？从组内移除，不依赖对象，不管这个对象自己是不是允许移除操作
+        if($result=$this->isObjectAbility($parameters)){
+            //如果这个对象是被当前组owner,默认允许一切操作，但是，一旦设置了一条规则，就按规则执行
+            //在当前组，该对象有对应的动作的属性吗？没有，报权限错误
+            $result=$this->objectHasAbility($parameters);
+            if(isset($result)) {
+
+                if (!$result) {
+//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+                    return $result;//
+                }
+            }
+        }
+        return $result;
+//        if(!$result){
+            //如果objectId存在，应该是show之类的动作，不存在，应该是index之类的动作
+            //如果group_user_object_permissions表里没有数据，需要看一看该用户的组角色是不是拥有权限
+            //如果groupId不为null，除了添加到组的动作，该对象都必须在该组内（子组内）。如果不在，要报参数错误，因为提交前需要确认在组内？
+            //如果有操作对象，做两个检查，第一，在不在当前组，第二，在当前组里有没有操作属性
+            //不管有没有操作对象，都要做一个检查，组里面能否容纳这个类型的对象
+//            if(isset($parameters['id'])){
+//
+//
+//            }
+//
+//        }
     }
 
     public function checkUserPermission($parameters){
         //非平台owner和管理员，没有group_id，只能查看个人own和分享的对象：mine，或者是一对一
         //非平台owner和管理员，有object_id，先检查是不是单独拥有的对象，单独拥有，可以操作一切非三元动作
 
-            //该用户单独拥有该对象吗？
-            $result = $this->checkPersonalOwnerPermission($parameters);
-            if (!isset($result)) {
-                return;//
-            } elseif ($result) {
-                return $result;
-            }
-
-            //是公共组的公开操作吗？
-            $result=$this->checkPublicAction($parameters);
-            if(!isset($result)){
-                return ;
-            }elseif($result){
-                return $result;
-            }
-//        }
-
-        //检查在源组的权限。允许用户不在该组内，但操作对象一定要在该组内
-        $result=$this->checkGroupPermission($parameters);
+        //是公共组的公开操作吗？
+        $result=$this->checkPublicAction($parameters);
         if(!isset($result)){
             return ;
         }elseif($result){
-            //检查在目的组的权限
-            if($this->isTernaryAction($parameters['actionId'])) {
-                return $this->checkGroupPermission(['groupId' => $parameters['destinationGroupId'],
-                    'userId' => $parameters['destinationUserId'], 'datatypeId' => $parameters['destinationDatatypeId'],
-                    'slug' => $parameters['destinationSlug'],
-                    'actionId' => $parameters['destinationActionId']]);
-            }
-            return true;
+            return $result;
         }
-        return false;
+
+        //该用户单独拥有该对象吗？
+        $result = $this->checkPersonalOwnerPermission($parameters);
+        if (!isset($result)) {
+            return;//
+        } elseif ($result) {
+            return $result;
+        }
+
+        //如果不是单独拥有，是用户间的分享吗？
+        $result = $this->checkPersonalGroupPermission($parameters);
+        if (!isset($result)) {
+            return;//
+        } elseif ($result) {
+            return $result;
+        }
+
+        //用户对当前组的index和show，是一个例外操作，只要用户在该组内拥有任意角色，无需group类型的授权，即可操作index和show
+//        //是对某个数据类型的操作吗？index之类则必须要有组角色，只有mine可以不经过授权
+//        if(!isset($parameters['groupId'])){
+//            return false;//必须要groupId
+//        }
+        //检查在源组的权限。允许用户不在该组内，但操作对象一定要在该组内
+        $result=$this->checkGroupRoleObjectPermissions($parameters);
+
+        if(isset($result)&&$result){
+            //检查在目的组的权限;如果是三元操作，必然要有objectId，可以没有有groupId，
+            if($this->isTernaryAction($parameters['actionId'])) {
+                return $this->checkTernaryPermission($parameters);
+            }
+        }
+        return $result;
+    }
+
+    public function checkTernaryPermission($parameters){
+        //检查在目的组的权限;如果是三元操作，必然要有objectId，可以没有有groupId，
+        //三元操作，把一个数据对象分享给另一个用户，或者是另一个组
+        $data['id']=$parameters['id'];//必有
+        $data['actionId']=$parameters['destinationActionId'];//必有
+        $data['slug'] = $parameters['slug'];//必有
+        $data['datatypeId'] = $parameters['datatypeId'];//必有
+        if(isset($parameters['destinationGroupId'])){
+            $data['groupId']=$parameters['destinationGroupId'];
+        }
+        if(isset($parameters['destinationUserId'])){
+            $data['userId']=$parameters['destinationUserId'];
+        }
+        return $this->checkUserPermission($data);
+
     }
 
     public function checkPermission($parameters){
@@ -447,7 +550,11 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             return $result;
         }
         if(strtolower($result->name)=='group'||strtolower($result->name)=='groups'){
-            if($parameters['id']==$parameters['groupId']){
+            if(isset($parameters['id'])){
+                if($parameters['id']==$parameters['groupId']){
+                    return true;
+                }
+            }else{
                 return true;
             }
         }
@@ -457,6 +564,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     //查看操作对象是不是在组内
     public function inGroup($parameters){
     //当前组有没有？不管子组
+        //如果是如果对象就是当前组，则默认包含
         $repository=Zsystem::repository('groupObject');
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         if(is_array($parameters['id'])){
@@ -492,52 +600,52 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $result;
     }
 
-    public function notInFamilyGroup($parameters){
-        //当前组有没有？
-        //子组里有没有
-        $result=$this->inFamilyGroup($parameters);
-        if($result){
-            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.failed');
-        }else{
-            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.success');
-        }
-        return $messageResponse;
-    }
-    public function shouldInFamilyGroup($parameters){
-        //当前组有没有？
-        //子组里有没有
-        $result=$this->inFamilyGroup($parameters);
-        if($result){
-            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.success');
+//    public function notInFamilyGroup($parameters){
+//        //当前组有没有？
+//        //子组里有没有
+//        $result=$this->inFamilyGroup($parameters);
+//        if($result){
+//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.failed');
+//        }else{
+//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.success');
+//        }
+//        return $messageResponse;
+//    }
+//    public function shouldInFamilyGroup($parameters){
+//        //当前组有没有？
+//        //子组里有没有
+//        $result=$this->inFamilyGroup($parameters);
+//        if($result){
+//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.success');
+//
+//        }else{
+//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.failed');
+//        }
+//        return $messageResponse;
+//    }
 
-        }else{
-            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.failed');
-        }
-        return $messageResponse;
-    }
-
-    public function isGroupMemberOwn($parameters){
-
-    }
+//    public function isGroupMemberOwn($parameters){
+//
+//    }
     //找出容器ID
-    public function ContainerIds($parameters){
-        //找出要检查的对象的类型ID
-        $repository=Zsystem::repository('datatype');
-        $datatypeId=$repository->key($parameters['slug']);
-        //查看在不在第一组内，只要有一个对象不在第一组内，整个都算不在
-        $repository=Zsystem::repository('groupObject');
-        $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
-        if(is_array($parameters['id'])){
-            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'in','algorithm'=>'and'];
-        }else{
-            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
-        }
-
-        $result=$repository->index($search);
-        if($result->count()>0){
-            return $result->pluck('group_id')->distinct()->toArray();
-        }
-    }
+//    public function ContainerIds($parameters){
+//        //找出要检查的对象的类型ID
+//        $repository=Zsystem::repository('datatype');
+//        $datatypeId=$repository->key($parameters['slug']);
+//        //查看在不在第一组内，只要有一个对象不在第一组内，整个都算不在
+//        $repository=Zsystem::repository('groupObject');
+//        $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
+//        if(is_array($parameters['id'])){
+//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'in','algorithm'=>'and'];
+//        }else{
+//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
+//        }
+//
+//        $result=$repository->index($search);
+//        if($result->count()>0){
+//            return $result->pluck('group_id')->distinct()->toArray();
+//        }
+//    }
 
     public function isGroupOwnerOrMember($groupId,$groupOwnerId,$userId){
         $result = $this->itemEqual( $userId,$groupOwnerId);
@@ -551,95 +659,95 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return false;
     }
 
-    //不支持多个ID
-    public function ownerIdSet($slug,$id){
-        $repository=Zsystem::repository($slug);
-        $search['search'][]=['field'=>'id','value'=>$id,'filter'=>'=','algorithm'=>'or'];
-        $result=$repository->fetch($search);
-        $owner_group_id=null;
-        $owner_id=null;
-        if(isset($result)){
-            if(isset($result->owner_group_id)) {
-                $owner_group_id = $result->owner_group_id;
-            }
-            if(isset($result->owner_id)){
-                $owner_id=$result->owner_id;
+//    //不支持多个ID
+//    public function ownerIdSet($slug,$id){
+//        $repository=Zsystem::repository($slug);
+//        $search['search'][]=['field'=>'id','value'=>$id,'filter'=>'=','algorithm'=>'or'];
+//        $result=$repository->fetch($search);
+//        $owner_group_id=null;
+//        $owner_id=null;
+//        if(isset($result)){
+//            if(isset($result->owner_group_id)) {
+//                $owner_group_id = $result->owner_group_id;
+//            }
+//            if(isset($result->owner_id)){
+//                $owner_id=$result->owner_id;
+//
+//            }
+//        }
+//        return ['ownerGroupId'=>$owner_group_id,'ownerId'=>$owner_id];
+//    }
 
-            }
-        }
-        return ['ownerGroupId'=>$owner_group_id,'ownerId'=>$owner_id];
-    }
-
-    //不是平台owner和平台admin的用户，通过本方法验证权限
-    public function checkNoAdminPermission($parameters){
-        //groupId为null？这个对象不在任何组内？是该用户拥有的吗？
-        if(!isset($parameters['groupId'])){
-            $idSet=$this->ownerIdSet($parameters['datatypeSlug'],$parameters['id']);
-            if(!isset($idSet['ownerGroupId'])&&isset($idSet['ownerId'])){
-                if($idSet['ownerId']==$parameters['userId']){
-                    $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
-                    return $messageResponse;//有ownerGroupId，ownerId就无效了
-                }
-            }
-        }
-
-        //如果不是该用户拥有，该用户在表里有单个针对该对象的权限吗？group_user_object_permissions.
-        $result=$this->checkGuop($parameters);
-        if(isset($result)){
-            if($result){
-                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
-                return $messageResponse;//
-            }else{
-                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-                return $messageResponse;//
-            }
-        }
-        //group_user_object_permissions表里没有数据，而groupId又为null，肯定该用户是没有权限的了
-        if(!isset($parameters['groupId'])){
-            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-            return $messageResponse;//
-        }
-
-        //如果group_user_object_permissions表里没有数据，需要看一看该用户的组角色是不是拥有权限
-        //如果groupId不为null，除了添加到组的动作，该对象都必须在该组内（子组内）。如果不在，要报参数错误，因为提交前需要确认在组内？
-        $result=$this->inGroup($parameters);
-        if(!$result){
-            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-            return $messageResponse;//
-        }
-        //该组有容纳该类型对象的属性吗？没有，报权限错误
-        $result=$this->groupHasDatatype($parameters);
-        if(!$result){
-            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-            return $messageResponse;//
-        }
-        //这个动作依赖对象的属性吗？从组内移除，不依赖对象，
-        if($this->isObjectAbility($parameters)){
-            //该对象有对应的动作的属性吗？没有，报权限错误
-            $result=$this->objectHasAbility($parameters);
-            if(!$result){
-                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-                return $messageResponse;//
-            }
-        }
-
-
-        //找出用户的角色在当前组内拥有的最高权限
-        $result=$this->checkGroupRoleObjectPermissions($parameters);
-
-            if($result){
-                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
-                return $messageResponse;//
-            }else{
-                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-                return $messageResponse;//
-            }
-
-        //该用户的角色的权限可以操作该类型对象吗？
-        //该用户针对单个对象有哪些操作权限
-        //该用户单个的权限可以操作该类型对象吗？
-        //最后处理一下三元操作，从一个组分享一个对象到另一个组
-    }
+//    //不是平台owner和平台admin的用户，通过本方法验证权限
+//    public function checkNoAdminPermission($parameters){
+//        //groupId为null？这个对象不在任何组内？是该用户拥有的吗？
+//        if(!isset($parameters['groupId'])){
+//            $idSet=$this->ownerIdSet($parameters['datatypeSlug'],$parameters['id']);
+//            if(!isset($idSet['ownerGroupId'])&&isset($idSet['ownerId'])){
+//                if($idSet['ownerId']==$parameters['userId']){
+//                    $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
+//                    return $messageResponse;//有ownerGroupId，ownerId就无效了
+//                }
+//            }
+//        }
+//
+//        //如果不是该用户拥有，该用户在表里有单个针对该对象的权限吗？group_user_object_permissions.
+//        $result=$this->checkGuop($parameters);
+//        if(isset($result)){
+//            if($result){
+//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
+//                return $messageResponse;//
+//            }else{
+//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
+//                return $messageResponse;//
+//            }
+//        }
+//        //group_user_object_permissions表里没有数据，而groupId又为null，肯定该用户是没有权限的了
+//        if(!isset($parameters['groupId'])){
+//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
+//            return $messageResponse;//
+//        }
+//
+//        //如果group_user_object_permissions表里没有数据，需要看一看该用户的组角色是不是拥有权限
+//        //如果groupId不为null，除了添加到组的动作，该对象都必须在该组内（子组内）。如果不在，要报参数错误，因为提交前需要确认在组内？
+//        $result=$this->inGroup($parameters);
+//        if(!$result){
+//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+//            return $messageResponse;//
+//        }
+//        //该组有容纳该类型对象的属性吗？没有，报权限错误
+//        $result=$this->groupHasDatatype($parameters);
+//        if(!$result){
+//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+//            return $messageResponse;//
+//        }
+//        //这个动作依赖对象的属性吗？从组内移除，不依赖对象，
+//        if($this->isObjectAbility($parameters)){
+//            //该对象有对应的动作的属性吗？没有，报权限错误
+//            $result=$this->objectHasAbility($parameters);
+//            if(!$result){
+//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
+//                return $messageResponse;//
+//            }
+//        }
+//
+//
+//        //找出用户的角色在当前组内拥有的最高权限
+//        $result=$this->checkGroupRoleObjectPermissions($parameters);
+//
+//            if($result){
+//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
+//                return $messageResponse;//
+//            }else{
+//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
+//                return $messageResponse;//
+//            }
+//
+//        //该用户的角色的权限可以操作该类型对象吗？
+//        //该用户针对单个对象有哪些操作权限
+//        //该用户单个的权限可以操作该类型对象吗？
+//        //最后处理一下三元操作，从一个组分享一个对象到另一个组
+//    }
 
     //在当前组的整个父系中检查该用户的权限，只针对该用户的角色，该类型的数据对象
     //只有角色的权限可以被子代继承，一对一授权的权限无法被继承
@@ -676,7 +784,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         //这些角色有哪些权限
         $repository=Zsystem::repository('groupRolePermission');
         unset($search);
-//        $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
+        $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
         $search['search'][]=['field'=>'role_id','value'=>$roleSet,'filter'=>'in','algorithm'=>'and'];
         $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'action_id','value'=>$actionId,'filter'=>'=','algorithm'=>'and'];
@@ -684,17 +792,25 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $result;
     }
     public function checkGroupRoleObjectPermissions($parameters){
+        //是对当前组进行index和show操作吗？只要用户在该组内有角色，就可以操作；如果该组内没有角色，父组的角色要有明确的对组的操作权限
+        if($this->isCurrentGroup($parameters)){
+            $repository=Zsystem::repository('groupUserRole');
+            $result=$repository->index(['group_id'=>$parameters['groupId'],'user_id'=>$parameters['userId']]);
+            if($result->count()>0){
+                return $result;
+            }
+        }
         //首先找到该组的全部ownerparent，该组为最后一个
         $result=$this->checkParentPermissions($parameters['groupId'],$parameters['userId'],$parameters['datatypeId'],$parameters['actionId']);
-        if(!isset($result)){
-            return $result;
-        }
+//        if(!isset($result)){
+//            return $result;
+//        }
 
-        if(isset($parameters['destinationGroupId'])){
-            $result=$this->checkParentPermissions($parameters['destinationGroupId'],$parameters['userId'],
-                $parameters['datatypeId'],$parameters['destinationActionId']);
-            //目的组及其parent
-        }
+//        if(isset($parameters['destinationGroupId'])){
+//            $result=$this->checkParentPermissions($parameters['destinationGroupId'],$parameters['userId'],
+//                $parameters['datatypeId'],$parameters['destinationActionId']);
+//            //目的组及其parent
+//        }
         return $result;
     }
 
@@ -752,7 +868,10 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $search['search'][]=['field'=>'id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'depend_object','value'=>1,'filter'=>'=','algorithm'=>'and'];
         $result=$repository->fetch($search);
-        return $result;
+        if(!isset($result)){
+            return false;
+        }
+        return true;
     }
 
     //一个对象在一个容器里，会给予动作限制，可以做哪些动作，不能做哪些动作
@@ -803,285 +922,4 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $messageResponse;
     }
 
-//    public function inPlatformOwner($parameters){
-//        //第一组，第二组必然存在，丢失则报错
-//        //查看该用户是第一组的owner还是成员
-//        $ownerGroup=$this->getPlatformOwnerGroup();
-//        if(!isset($ownerGroup)){
-//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.failed');
-//            return $messageResponse;
-//        }
-//
-//        if($parameters['datatypeSlug']=='user'){
-//            //如果要检查的对象是用户类型，可以看看这个用户是不是第一组的owner，
-//            //owner是一对一的，任何一个ID不是owner，都为错
-//            $array=$parameters['id'];
-//            $item=$ownerGroup->owner_id;
-//            $result = $this->itemEqual( $array,$item);
-//            if ($result) {
-//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.success');
-//                return $messageResponse;
-//            }
-//        }
-//
-//        //这些数据对象没有group_owner_id,也没有owner_id的，都只能默认归平台owner所有了
-//        $repository=Zsystem::repository($parameters['datatypeSlug']);
-//        $search['search'][]=['field'=>'id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'or'];
-//        $result=$repository->index($search);
-//        if(!isset($result)){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-//            return $messageResponse;//必然应该有返回值，这是错误
-//        }
-//        if($result->count()==0){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-//            return $messageResponse;//必然应该有返回值，这是错误
-//        }
-//        $ownerGroupId=$result->pluck('owner_group_id')->distinct()->toArray();
-//        if(emptyObjectOrArray($ownerGroupId)){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.success');
-//            return $messageResponse;//
-//        }
-//        }
-//    }
-//        if(is_array($parameters['id'])){
-//            foreach ($parameters['id'] as $key=>$id){
-//
-//        //第一组装载了这些数据对象吗？
-//        $result=$this->inGroup(['group_id'=>$ownerGroup->id,'datatypeId'=>$parameters['datatypeId'],'id'=>$parameters['id']]);
-//        if($result){
-//            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.success');
-//            return $messageResponse;
-//        }
-//
-//        if($parameters['datatypeSlug']!='user') {
-//            //第一组的成员单独拥有这些数据对象吗？
-//            $result = $this->isGroupMemberOwn(['group_id' => $ownerGroup->id, 'datatypeId' => $parameters['datatypeId'], 'id' => $parameters['id']]);
-//            if ($result) {
-//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.success');
-//                return $messageResponse;
-//            }
-//        }
-//
-//        else{
-//            //不是用户类型的数据对象，都有一个owner_group_id参数，如果owner_group_id不是第一组，就返回false
-//            //不是用户类型的数据对象，都有一个owner_id参数，如果owner_id不是第一组的成员，就返回false
-//            //先把这些数据对象的完整数据集取出，里面有owner_group_id和owner_id
-//            $repository=Zsystem::repository($parameters['datatypeSlug']);
-//            if(is_array($parameters['id'])){
-//                foreach ($parameters['id'] as $key=>$id){
-//                    $search['search'][]=['field'=>'id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'or'];
-//                    $result=$repository->fetch($search);
-//                    if(isset($result)){
-//                        if(isset($result->owner_group_id)){
-//                            if($result->owner_group_id!=$ownerGroup->id){
-//                                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-//                                return $messageResponse;//只要有一个的ownergroup不是平台owner组，就为false
-//                            }
-//                        }
-//
-//                    }
-//                }
-//
-//            }else{
-//                $search['search'][]=['field'=>'id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'or'];
-//                $result=$repository->fetch($search);
-//                if(isset($result)){
-//                    if(isset($result->owner_group_id)){
-//                        if($result->owner_group_id!=$ownerGroup->id){
-//                            $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.failed');
-//                            return $messageResponse;//只要有一个的ownergroup不是平台owner组，就为false
-//                        }
-//                    }
-//
-//                }
-//            }
-//            $result=$repository->index($search);
-//
-//            $array=$parameters['id'];
-//            $item=$ownerGroup->owner_id;
-//            $result = $this->itemEqual( $array,$item);
-//            if ($result) {
-//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.validation.success');
-//                return $messageResponse;
-//            }
-//        }
-//
-//
-//
-//
-//
-//        //如果用户不是owner，还要检查是不是在第一组内，也可以具有第一组的特权
-//        $ids=$this->ContainerIds(['datatypeSlug'=>'user','id'=>$parameters['id']]);
-//
-//
-//
-//
-//
-//
-//
-//        //如果要检查的对象是用户类型，这个用户虽然不是第一组的owner，但如果在第一组容器内，也可以具有第一组的特权
-//        //member是一对多的，一个用户可以在多个组，有一个组是owner组，都为真
-//
-//        //如果数据对象不是第一组的owner，那么，这个对象被那些组装载？
-//        $result=$this->ContainerIds(['ownerGroupId'=>$ownerGroup->id,'slug'=>$parameters['datatypeSlug'],'id'=>$parameters['id']]);
-//        if(isset($result)){
-//            //这些id有没有不是第一组的
-//            if(count($result)>1){
-//                $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.failed');
-//                return $messageResponse;//只要多于一个组，就证明这个数据对象被多个组装载
-//            }
-//            if($result[0]==$ownerGroup->id){
-//                $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.success');
-//                return $messageResponse;
-//            }
-//        }
-//        //不在任何容器/组里
-//        if($result->count()>0){
-//            //有没有不是第一组
-//            if(is_array($parameters['id'])){
-//                if($result->count()==count($parameters['id'])){
-//                    $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.success');
-//                    return $messageResponse;
-//                }
-//            }else{
-//                if($result->count()==1){
-//                    $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.success');
-//                    return $messageResponse;
-//                }
-//            }
-//            if($result->count()==1){
-//                $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.failed');
-//                return $messageResponse;
-//            }
-//        }
-//
-//
-//
-//
-//        //如果数据对象不在任何一组，是否是第一组的组成员单独拥有这个数据对象
-//        unset($search);
-//        $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
-//        if(is_array($parameters['id'])){
-//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'in','algorithm'=>'and'];
-//        }else{
-//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
-//        }
-//        $result=$repository->fetch($search);
-//        if(!emptyObjectOrArray($result)){
-//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.failed');
-//            return $messageResponse;
-//        }
-//        unset($search);
-//        $repository=Zsystem::repository('userObject');
-//        $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
-//        if(is_array($parameters['id'])){
-//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'in','algorithm'=>'and'];
-//        }else{
-//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
-//        }
-//        $result=$repository->index($search);
-//        if(emptyObjectOrArray($result)){
-//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.success');
-//            return $messageResponse;//如果没有任何人拥有这个数据对象,只能是owner有权限处理
-//        }
-//        if($result->count()==0){
-//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.success');
-//            return $messageResponse;//如果没有任何人拥有这个数据对象,只能是owner有权限处理
-//        }
-//        $userIds=$result->pluck('user_id')->toArray();
-//        $result=$this->inPlatformOwner(['slug'=>$parameters['slug'],'datatype_slug'=>'user','id'=>$userIds]);
-//            //如果这个数据对象不在任何组内，查看第一组的组成员是否拥有这个数据对象
-////        $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.success');
-//        return $result;
-////        }
-//    }
-//
-//    public function platformAdminCanDo($parameters){
-//        //没有第一第二组，报错
-//        $repository=Zsystem::repository('group');
-//        $groups=$repository->get(0,2);
-//        if(isset($groups)){
-//            if($groups->count()<2){
-//                $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.failed');
-//                return $messageResponse;
-//            }
-//            if($groups[0]->id==$parameters['groupId']){
-//                $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.failed');
-//                return $messageResponse;
-//            }
-//        }
-//
-//        //当前用户是在第二组吗？不在第二组不能操作
-//        $repository=Zsystem::repository('datatype');
-//        $userTypeId=$repository->key('user');
-//        $groupId=$groups[1]->id;
-//        $repository=Zsystem::repository('groupObject');
-//        $search['search'][]=['field'=>'datatype_id','value'=>$userTypeId,'filter'=>'=','algorithm'=>'and'];
-//        $search['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
-//        $search['search'][]=['field'=>'object_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-//        $result=$repository->fetch($search);
-//        if(!isset($result)){
-//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.submit.failed');
-//            return $messageResponse;
-//        }
-//        //当前操作对象是不是被第一组owner？或者是仅仅被第一组成员所onwer吗？
-//        //个人owner和组owner，如果有组owner，则无视个人owner，
-//        $slug=$parameters['slug'];
-//        $repository=Zsystem::repository($slug);
-//        $id=$parameters['id'];
-//        if(is_array($id)){
-//            foreach ($id as $key=>$item){
-//                $search['search'][]=['field'=>id,'value'=>$item,'filter'=>'=','algorithm'=>'or'];
-//            }
-//        }else{
-//            $search['search'][]=['field'=>id,'value'=>$parameters['id'],'filter'=>'=','algorithm'=>'or'];
-//        }
-//
-//        $result=$repository->index($search);
-//        if(!isset($result)){
-//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.failed');
-//            return $messageResponse;//操作对象必须存在
-//        }
-//        if($result->count()==0){
-//            $messageResponse=$this->messageResponse($parameters['slug'],  'authorize.validation.failed');
-//            return $messageResponse;//操作对象必须存在
-//        }
-//        //找出操作对象的owner,有一个人在第一组，就不能操作
-//        $owner_ids=$result->pluck('owner_id')->toArray();
-//        if($owner_ids->count()>0){
-//            if(count($owner_ids)>1){
-//                $search['search'][]=['field'=>'object_id','value'=>$owner_ids,'filter'=>'in','algorithm'=>'and'];
-//            }else{
-//                $search['search'][]=['field'=>'object_id','value'=>$owner_ids[0],'filter'=>'=','algorithm'=>'and'];
-//            }
-//            $search['search'][]=['field'=>'group_id','value'=>$groups[0]->id,'filter'=>'=','algorithm'=>'and'];
-//            $search['search'][]=['field'=>'datatype_id','value'=>$userTypeId,'filter'=>'=','algorithm'=>'and'];
-//        }
-//        if(isset($result)) {
-//            if ($result->count() == 0) {
-//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-//                return $messageResponse;//有owner是第一组成员
-//            }
-//        }
-//
-//        //找出操作对象的owner组,只要有一个是第一组，就不能操作
-//        $owner_group_ids=$result->pluck('owner_group_id')->toArray();
-//        if($owner_group_ids->count()>0){
-//            if(count($owner_group_ids)>1){
-//                $search['search'][]=['field'=>'object_id','value'=>$owner_group_ids,'filter'=>'in','algorithm'=>'and'];
-//            }else{
-//                $search['search'][]=['field'=>'object_id','value'=>$owner_group_ids[0],'filter'=>'=','algorithm'=>'and'];
-//            }
-//            $search['search'][]=['field'=>'group_id','value'=>$groups[0]->id,'filter'=>'=','algorithm'=>'and'];
-//            $search['search'][]=['field'=>'datatype_id','value'=>$userTypeId,'filter'=>'=','algorithm'=>'and'];
-//        }
-//        if(isset($result)) {
-//            if ($result->count() == 0) {
-//                $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.failed');
-//                return $messageResponse;//有owner是第一组成员
-//            }
-//        }
-//        $messageResponse = $this->messageResponse($parameters['slug'], 'authorize.submit.success');
-//        return $messageResponse;//有owner是第一组成员
-//    }
 }

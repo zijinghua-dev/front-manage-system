@@ -84,9 +84,16 @@ class ParameterService extends BaseService implements ParameterServiceInterface
             list($class, $method) = explode('@', $request->route()->getActionName());
             $data['action']=$method;
         }
+        //如果是三元操作符，把其余参数也进行转换
         if(!isset($data['actionId'])){
             $repository=Zsystem::repository('action');
-            $data['actionId']=$repository->key($data['action']);
+            $search['search'][]=['field'=>'name','value'=>$data['action'],'filter'=>'=','algorithm'=>'or'];
+            $search['search'][]=['field'=>'alias','value'=>$data['action'],'filter'=>'=','algorithm'=>'or'];
+            $action=$repository->fetch($search);
+            if($action->ternary){
+                $data['ternaryActionId']=$action->ternary_id;
+            }
+            $data['actionId']=$action->id;
         }
 
         //然后拿到组ID
@@ -95,6 +102,10 @@ class ParameterService extends BaseService implements ParameterServiceInterface
         if(!isset($data['groupId'])){
             $data['groupId']=null;
         }
+//        $groupId=$request->input('groupId');
+//        if(isset($groupId)){
+//            $data['groupId']=$groupId;
+//        }
 
         //输入destinationGroupId,destinationUserUuid,destinationUserUuid需要转换成id
         //输入$actionId要转换为

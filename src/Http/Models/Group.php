@@ -11,7 +11,7 @@ use Zijinghua\Zvoyager\Http\Contracts\GroupModelInterface;
 class Group extends BaseModel implements GroupModelInterface
 {
     protected $table='groups';
-    protected $fillable=['name','describe'];
+    protected $fillable=['name','describe','owner_id','owner_group_id','datatype_id','object_id'];
 
     public function dataType(){
         return $this->hasMany('Zijinghua\Zvoyager\Http\Models\GroupDataType','group_id');

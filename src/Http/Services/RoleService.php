@@ -68,21 +68,21 @@ class RoleService extends BaseGroupService implements RoleServiceInterface
 //    }
 
     //这是一个三元操作符，但在一个方法里完成：角色，用户，或者是角色，动作，对象类型
-    //authorize_user_id,id
+    //authorize_user_id,id(角色),authorize/deauthorize
     //调用本方法，需要角色在本组内，用户能操作本方法
-    public function authorize($parameters){
+    public function assign($parameters){
         //给角色添加权限
         if(isset($parameters['authorizeActionId'])&&isset($parameters['authorizeDatatypeId'])){
             $repository=$this->repository('groupRolePermission');
-            $repository->save(['role_id'=>$parameters['authorizeId'],'action_id'=>$parameters['authorizeActionId'],
-                'datatype_id'=>$parameters['authorizeDatatypeId'],'group_id'=>$parameters['groupId']]);
-            $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.success');
+            $repository->save(['role_id'=>$parameters['assignId'],'action_id'=>$parameters['assignActionId'],
+                'datatype_id'=>$parameters['assignDatatypeId'],'group_id'=>$parameters['groupId']]);
+            $messageResponse=$this->messageResponse($this->getSlug(),'assign.submit.success');
             return $messageResponse;
-        }elseif(isset($parameters['authorizeUserId'])){
+        }elseif(isset($parameters['assignUserId'])){
             $repository=$this->repository('datatype');
             $datatypeId=$repository->key('user');
             if(!isset($datatypeId)){
-                $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.failed');
+                $messageResponse=$this->messageResponse($this->getSlug(),'assign.submit.failed');
                 return $messageResponse;
             }
             DB::beginTransaction();
@@ -90,18 +90,18 @@ class RoleService extends BaseGroupService implements RoleServiceInterface
             //先将用户添加进组
 
             $repository=$this->repository('groupObject');
-            $repository->save(['datatype_id'=>$datatypeId,'object_id'=>$parameters['authorizeUserId'],
+            $repository->save(['datatype_id'=>$datatypeId,'object_id'=>$parameters['assignUserId'],
                 'group_id'=>$parameters['groupId']]);
             //给用户授权
             $repository=$this->repository('groupUserRole');
-            $repository->save(['role_id'=>$parameters['authorizeId'],'user_id'=>$parameters['authorizeUserId'],
+            $repository->save(['role_id'=>$parameters['id'],'user_id'=>$parameters['assignUserId'],
                 'group_id'=>$parameters['groupId']]);
                 DB::commit();
-                $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.success');
+                $messageResponse=$this->messageResponse($this->getSlug(),'assign.submit.success');
                 return $messageResponse;
             } catch (Exception $e) {
                 DB::rollback();
-                $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.failed');
+                $messageResponse=$this->messageResponse($this->getSlug(),'assign.submit.failed');
                 return $messageResponse;
             }
         }
