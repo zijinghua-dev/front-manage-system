@@ -307,40 +307,40 @@ class GroupService extends BaseGroupService
         //如果传递了角色名称，则进一步筛选
         $ids=[];
         $search=null;
-        if(isset($parameters['role'])){
-            $repository=$this->repository('role');
-            $roleId=$repository->key($parameters['role']);
-
-            if(isset($roleId)){
-                $search['search'][]=['field'=>'role_id','value'=>$roleId,'filter'=>'=','algorithm'=>'and'];
-            }
-            if(isset($parameters['groupId'])){
-                $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
-            }
-            $repository=$this->repository('groupUserRole');
-            $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-            $result=$repository->index($search);
-            if($result->count()==0){
-                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-                return $messageResponse;
-            }
-            $ids=array_unique($result->pluck('group_id')->toArray());
-            if(!$ids){
-                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-                return $messageResponse;
-            }
-            //这些组是需要的数据类型吗？
-            $repository=$this->repository($parameters['slug']);
-            unset($search);
-            $search['search'][]=['field'=>'group_id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
-            $result=$repository->index($search);
-            if($result->count()==0){
-                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-                return $messageResponse;
-            }
-            $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success',$result);
-            return $messageResponse;
-        }
+//        if(isset($parameters['role'])){
+//            $repository=$this->repository('role');
+//            $roleId=$repository->key($parameters['role']);
+//
+//            if(isset($roleId)){
+//                $search['search'][]=['field'=>'role_id','value'=>$roleId,'filter'=>'=','algorithm'=>'and'];
+//            }
+//            if(isset($parameters['groupId'])){
+//                $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
+//            }
+//            $repository=$this->repository('groupUserRole');
+//            $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
+//            $result=$repository->index($search);
+//            if($result->count()==0){
+//                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
+//                return $messageResponse;
+//            }
+//            $ids=array_unique($result->pluck('group_id')->toArray());
+//            if(!$ids){
+//                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
+//                return $messageResponse;
+//            }
+//            //这些组是需要的数据类型吗？
+//            $repository=$this->repository($parameters['slug']);
+//            unset($search);
+//            $search['search'][]=['field'=>'group_id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+//            $result=$repository->index($search);
+//            if($result->count()==0){
+//                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
+//                return $messageResponse;
+//            }
+//            $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success',$result);
+//            return $messageResponse;
+//        }
 
         //如果没有限制角色，则把所有的子组取出来
         if(isset($parameters['groupId'])){
@@ -349,23 +349,29 @@ class GroupService extends BaseGroupService
             unset($search);
             $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
             $result=$repository->index($search);
-            if($result->count()==0){
-                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-                return $messageResponse;
-            }
-            $ids=array_unique($result->pluck('child_id')->toArray());
-            if(!$ids){
-                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-                return $messageResponse;
+            if($result->count()>0){
+                $ids=array_unique($result->pluck('child_id')->toArray());
+                if(!$ids){
+                    return null;
+                }
             }
             $ids=array_merge($ids,[$parameters['groupId']]);
             unset($search);
             $search['search'][]=['field'=>'group_id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
+            $repository=$this->repository('groupObject');
+            $result=$repository->index($search);
+            if($result->count()==0){
+                $messageResponse=$this->messageResponse($parameters['slug'],'index.submit.failed');
+                return $messageResponse;
+            }
+            $ids=$result->pluck('object_id')->toArray();
+            unset($search);
+            $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
         }
         $repository=$this->repository($parameters['slug']);
-
         $result=$repository->index($search);
-        $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success',$result);
+        $messageResponse=$this->messageResponse($parameters['slug'],'index.submit.success',$result);
         return $messageResponse;
     }
 

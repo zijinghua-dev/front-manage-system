@@ -13,7 +13,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     {
         //没有groupId和datatypeId时，返回topMenus
         //有groupId和datatypeId时，返回secondMenus
-
+//
         if(!isset($parameters['groupId'])&&!isset($parameters['menuDatatypeId'])){
             $result= $this->topMenus($parameters['userId']);
         }else{
@@ -105,6 +105,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         return ['datatype'=>$datatypes,'action'=>$actions];
     }
 
+    //如果这个类型是一种组，那么，还可以有datatype子菜单
     //现在是特例，活动。当groupId，datatypeId同时存在，datatypeId是活动，要返回活动的动作和下一级：报名，卡，推广页面
     public function thirdMenus($parameters){
         $repository=Zsystem::repository('datatype');
@@ -121,5 +122,12 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
             }
             return $result;
         }
+    }
+
+    public function availableDatatype(){
+
+    }
+    public function availableAction(){
+
     }
 }
