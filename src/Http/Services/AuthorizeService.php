@@ -186,22 +186,23 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         if($group->id!=$parameters['groupId']){
             return false;
         }
-        if(isset($parameters['id'])){
-            //检查一对一权限
-            $repository=Zsystem::repository('guop');
-            $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'user_id','value'=>null,'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'action_id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
-            $result=$repository->fetch($search);
-            if(isset($result)){
-                return true;
-            }
-        }
+//        if(isset($parameters['id'])){
+//            //检查一对一权限
+//            $repository=Zsystem::repository('guop');
+//            $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'user_id','value'=>null,'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'object_id','value'=>$parameters['id'],'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
+//            $search['search'][]=['field'=>'action_id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
+//            $result=$repository->fetch($search);
+//            if(isset($result)){
+//                return true;
+//            }
+//        }
        //检查角色权限
         $repository=Zsystem::repository('groupRolePermission');
         $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'role_id','value'=>null,'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'datatype_id','value'=>$parameters['datatypeId'],'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'action_id','value'=>$parameters['actionId'],'filter'=>'=','algorithm'=>'and'];
         $result=$repository->fetch($search);
@@ -379,7 +380,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         //非平台owner和管理员，没有group_id，只能查看个人own和分享的对象：mine，或者是一对一
         //非平台owner和管理员，有object_id，先检查是不是单独拥有的对象，单独拥有，可以操作一切非三元动作
 
-        //是公共组的公开操作吗？
+        //是公共组的操作吗？每个用户默认是公共组的默认角色null，有角色的，如公共组的管理员，不在这个方法里操作，因为这里是特例
         $result=$this->checkPublicAction($parameters);
         if(!isset($result)){
             return ;
@@ -387,21 +388,21 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             return $result;
         }
 
-        //该用户单独拥有该对象吗？
-        $result = $this->checkPersonalOwnerPermission($parameters);
-        if (!isset($result)) {
-            return;//
-        } elseif ($result) {
-            return $result;
-        }
-
-        //如果不是单独拥有，是用户间的分享吗？
-        $result = $this->checkPersonalGroupPermission($parameters);
-        if (!isset($result)) {
-            return;//
-        } elseif ($result) {
-            return $result;
-        }
+//        //该用户单独拥有该对象吗？
+//        $result = $this->checkPersonalOwnerPermission($parameters);
+//        if (!isset($result)) {
+//            return;//
+//        } elseif ($result) {
+//            return $result;
+//        }
+//
+//        //如果不是单独拥有，是用户间的分享吗？
+//        $result = $this->checkPersonalGroupPermission($parameters);
+//        if (!isset($result)) {
+//            return;//
+//        } elseif ($result) {
+//            return $result;
+//        }
 
         //用户对当前组的index和show，是一个例外操作，只要用户在该组内拥有任意角色，无需group类型的授权，即可操作index和show
 //        //是对某个数据类型的操作吗？index之类则必须要有组角色，只有mine可以不经过授权
@@ -766,6 +767,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
 //        $search['search'][]=['field'=>'group_id','value'=>[5],'filter'=>'in','algorithm'=>'and'];
         $search['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'enabled','value'=>1,'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
         if($result->count()>0){
             $roleSet=[];
@@ -793,13 +795,13 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     }
     public function checkGroupRoleObjectPermissions($parameters){
         //是对当前组进行index和show操作吗？只要用户在该组内有角色，就可以操作；如果该组内没有角色，父组的角色要有明确的对组的操作权限
-        if($this->isCurrentGroup($parameters)){
-            $repository=Zsystem::repository('groupUserRole');
-            $result=$repository->index(['group_id'=>$parameters['groupId'],'user_id'=>$parameters['userId']]);
-            if($result->count()>0){
-                return $result;
-            }
-        }
+//        if($this->isCurrentGroup($parameters)){
+//            $repository=Zsystem::repository('groupUserRole');
+//            $result=$repository->index(['group_id'=>$parameters['groupId'],'user_id'=>$parameters['userId']]);
+//            if($result->count()>0){
+//                return $result;
+//            }
+//        }这一块代码值得怀疑
         //首先找到该组的全部ownerparent，该组为最后一个
         $result=$this->checkParentPermissions($parameters['groupId'],$parameters['userId'],$parameters['datatypeId'],$parameters['actionId']);
 //        if(!isset($result)){
