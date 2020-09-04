@@ -30,8 +30,12 @@ class UserService extends BaseGroupService implements UserServiceInterface
         $name=$credential;
         if(in_array(array_key_first($name),getConfigValue('zbasement.fields.auth.internal'))){
             $parameters=array_merge($name,$password);
+            $parameters['groupId']=null;
+            $parameters['userId']=null;
             return parent::store($parameters);
         }elseif(in_array(array_key_first($name),getConfigValue('zbasement.fields.auth.external'))){
+            $name['groupId']=null;
+            $name['userId']=null;
             return parent::store($name);
         }
     }
