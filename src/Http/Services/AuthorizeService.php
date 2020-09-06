@@ -4,6 +4,7 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 use Zijinghua\Zbasement\Http\Services\BaseService;
@@ -753,6 +754,14 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
     //在当前组的整个父系中检查该用户的权限，只针对该用户的角色，该类型的数据对象
     //只有角色的权限可以被子代继承，一对一授权的权限无法被继承
     public function checkParentPermissions($groupId,$userId,$datatypeId,$actionId){
+        $result=$this->getParentPermissions($groupId,$userId,$datatypeId,$actionId);
+        //找出这个组的全部父组
+        return $result;
+    }
+
+    //如果$datatypeId,$actionId任一为空，返回用户在该组全部权限，数据集
+    //如果$datatypeId,$actionId都不为空，返回用户在该组该权限，单条记录，如果没有即为null
+    public function getParentPermissions($groupId,$userId,$datatypeId,$actionId){
         //找出这个组的全部父组
         $repository=Zsystem::repository('groupParent');
         $search['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
@@ -765,7 +774,6 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $repository=Zsystem::repository('groupUserRole');
         unset($search);
         $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
-//        $search['search'][]=['field'=>'group_id','value'=>[5],'filter'=>'in','algorithm'=>'and'];
         $search['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
         $search['search'][]=['field'=>'enabled','value'=>1,'filter'=>'=','algorithm'=>'and'];
         $result=$repository->index($search);
@@ -780,7 +788,7 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
             }
 //            $roleIdSet=$result->pluck('role_id')->toArray();
         }else{
-            return false;
+            return new Collection();
         }
 
         //这些角色有哪些权限
@@ -788,11 +796,20 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         unset($search);
         $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
         $search['search'][]=['field'=>'role_id','value'=>$roleSet,'filter'=>'in','algorithm'=>'and'];
-        $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
-        $search['search'][]=['field'=>'action_id','value'=>$actionId,'filter'=>'=','algorithm'=>'and'];
-        $result=$repository->fetch($search);//源组的操作权限全部取出来了
+        if(isset($datatypeId)){
+            $search['search'][]=['field'=>'datatype_id','value'=>$datatypeId,'filter'=>'=','algorithm'=>'and'];
+        }
+        if(isset($actionId)){
+            $search['search'][]=['field'=>'action_id','value'=>$actionId,'filter'=>'=','algorithm'=>'and'];
+        }
+        if(isset($datatypeId)&&isset($actionId)) {
+            $result = $repository->fetch($search);//源组的操作权限全部取出来了
+            return $result;
+        }
+        $result = $repository->index($search);//源组的操作权限全部取出来了
         return $result;
     }
+
     public function checkGroupRoleObjectPermissions($parameters){
         //是对当前组进行index和show操作吗？只要用户在该组内有角色，就可以操作；如果该组内没有角色，父组的角色要有明确的对组的操作权限
 //        if($this->isCurrentGroup($parameters)){

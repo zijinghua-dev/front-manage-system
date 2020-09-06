@@ -15,6 +15,7 @@ use Zijinghua\Zvoyager\Http\Contracts\ObjectActionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\OrganizeModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\OrganizeServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
+use Zijinghua\Zvoyager\Http\Contracts\PermissionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
@@ -31,6 +32,7 @@ use Zijinghua\Zvoyager\Http\Models\ObjectAction;
 use Zijinghua\Zvoyager\Http\Models\GroupRolePermission;
 use Zijinghua\Zvoyager\Http\Models\GroupUserObjectPermission;
 use Zijinghua\Zvoyager\Http\Models\Organize;
+use Zijinghua\Zvoyager\Http\Models\Permission;
 use Zijinghua\Zvoyager\Http\Models\Role;
 use Zijinghua\Zvoyager\Http\Repositories\ActionRepository;
 use Zijinghua\Zbasement\Http\Repositories\Contracts\UserRepositoryInterface;
@@ -236,6 +238,11 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('menuService', MenuServiceInterface::class);
         $this->app->bind('menuService', function () {
             return new MenuService();
+        });
+
+        $loader->alias('permissionModel', PermissionModelInterface::class);
+        $this->app->bind('permissionModel', function () {
+            return new Permission();
         });
     }
     public function boot(Router $router, Dispatcher $event)
