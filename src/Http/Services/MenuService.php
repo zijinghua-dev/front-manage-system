@@ -10,7 +10,9 @@ use Zijinghua\Zvoyager\Http\Contracts\MenuServiceInterface;
 
 class MenuService extends BaseGroupService implements MenuServiceInterface
 {
-    //请求参数：menuObjectId，menuDatatypeId，menuLever：1，第一级；2，第二季；3，两级同传；默认：personalGroupId，用户的个人组，不发送也可以后台解析
+    //请求参数：menuDatatypeId，menuLever，menuObjectId（默认：personalGroupId，用户的个人组，不发送也可以后台解析）；
+    //menuLever：1，第一级；2，第二季；3，两级同传；
+    //menuDatatypeId,点击一级菜单，发送对应菜单项；点击二级菜单项，发送menuDatatypeId，contentObjectId
     //menuObjectId，menuDatatypeId，都是用户选择的当前项，当用户点击列表，选择一项，即为menuObjectId，而menuDatatypeId是从菜单上获得的
     //当用户发送menuDatatypeId，意味着至少在topMenus上选择了一项，可以返回二级菜单了
     //如果用户发送menuObjectId，意味着至少在列表中选择了一项，可以返回该组内的datatype了
@@ -18,10 +20,13 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     {
         //如果传递了MenuDatatype，没有MenuGroup，查看是否是group
         if(!isset( $parameters['personalGroupId'])){
-            $personalGroupId=$this->getPersonalGroupId($parameters['userId']);
-            if(isset($personalGroupId)){
-                $parameters['personalGroupId']=$personalGroupId;
-            }
+            $parameters['personalGroupId']=$this->getPersonalGroupId($parameters['userId']);
+        }
+        if(!isset( $parameters['menuGroupId'])){
+            $parameters['menuGroupId']=$this->getMenuGroupId($parameters);
+        }
+        if(!isset( $parameters['groupId'])){
+            $parameters['groupId']=$this->getCurrentGroupId($parameters);
         }
 
         switch ($parameters['menuLever']) {
@@ -38,10 +43,39 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         return $messageResponse;
     }
 
-    protected function getMenuGroupId($datatypeId,$objectId){
+    protected function getCurrentGroupId($parameters){
+        //当personalGroupId为null，当前menuObjectId为null，那么currentGroupId为null，现在是全局搜索
+        //当personalGroupId为null，当前menuObjectId不为null，那么需要查看menuObjectId和menuDatatypeId对应的GroupId，
+        //这就是currentGroupId，如果为null，现在是全局搜索
+        //当personalGroupId不为null，当前menuObjectId为null，那么currentGroupId为personalGroupId
+        //当personalGroupId不为null，当前menuObjectId也不为null，那么currentGroupId为menuObjectId和menuDatatypeId对应的GroupId
+        if(!isset($parameters['personalGroupId'])){
+            if(!isset($parameters['menuObjectId'])){
+                return null;
+            }else{
+                return $this->getMenuGroupId($parameters);
+            }
+        }else{
+            if(!isset($parameters['menuObjectId'])){
+                return $parameters['personalGroupId'];
+            }else{
+                return $this->getMenuGroupId($parameters);
+            }
+        }
+    }
+
+    protected function getMenuGroupId($parameters){
+        if(isset($parameters['menuGroupId'])){
+            return $parameters['menuGroupId'];
+        }
+        $datatypeId=$parameters['menuDatatypeId'];
+        $objectId=$parameters['menuObjectId'];
         $repository=$this->repository('datatype');
         $datatype=$repository->fetch(['id'=>$datatypeId]);
         if(isset($datatype)){
+            if(!isset($datatype->is_group)||(!$datatype->is_group)){
+                return ;
+            }
             $repository=$this->repository($datatype->slug);
             $datatype=$repository->fetch(['id'=>$objectId]);
             if(isset($datatype->group_id)){
@@ -64,7 +98,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 //            $parameters=$this->parameters($parameters);
 //        }
         //如果personGroupId为null，代表是平台admin和平台owner
-        if(!isset($parameters['personalGroupId'])||$parameters['personalGroupId']==null){
+        if(!isset($parameters['personGroupId'])){
             $repository=$this->repository('datatype');
             $dataSet=$repository->index(['menu_level'=>1]);
             return $dataSet;
@@ -87,19 +121,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         //由于前端点击菜单项，只能传递menuGroupID，和菜单项 menuDatatypeId， 并没有GroupID，所以，
         //一级菜单的GroupID是personGroupID，如果是平台管理员，没有personGroupID，是全局；
         //二级菜单：如果明确传递了menuGroupId，GroupID是menuGroupId，如果没有传递menuGroupId，就是menuDatatypeId对应的menuGroupId；
-        if(isset($parameters['menuObjectId'])&&isset($parameters['menuDatatypeId'])){
-            if(isset($parameters['menuGroupId'])){
-                $groupId=$parameters['menuGroupId'];
-            }else{
-                $groupId=$this->getMenuGroupId($parameters['menuDatatypeId'],$parameters['menuObjectId']);
-            }
-
-            if(isset($groupId)){
-                $parameters['groupId']=$groupId;
-                $datatypes=$this->availableDatatype($parameters);//没有指定当前组，是没有可包容的数据类型的
-            }
-        }
-
+        $datatypes=$this->availableDatatype($parameters);//没有指定当前组，是没有可包容的数据类型的
         $actions=$this->availableAction($parameters);
 
         return ['datatype'=>$datatypes,'action'=>$actions];
@@ -116,118 +138,157 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         return ['topMenu'=>$topMenus,'secondMenu'=>$secondMenus];
     }
 
+    //一个容器数据对象，默认可以装载哪些对象
+    public function defaultDatatypes($datatypeId){
+        $repository = $this->repository('datatypeFamily');
+        $dataSet = $repository->index(['datatype_id' => $datatypeId]);
+        if($dataSet->count()==0){
+            return new Collection();
+        }
+        $ids=$dataSet->pluck('child_datatype_id')->toArray();
+        $repository = $this->repository('datatype');
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $dataSet = $repository->index($search);
+        return $dataSet;
+    }
+
+    //每个单独的容器对象可以装载的其他数据对象，这个要一对一的配置
+    public function singleDatatypes($groupId){
+        //如果已经选择了一个组，有了objectID，就可以找到这个组默认的可容纳的数据类型，以及单独配置的数据类型限制
+        $repository = $this->repository('groupDatatype');
+        $dataSet = $repository->index(['group_id' => $groupId]);
+        if($dataSet->count()==0){
+            return new Collection();
+        }
+        $ids = $dataSet->pluck('datatype_id')->unique()->toArray();
+        $repository = $this->repository('datatype');
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $dataSet = $repository->index($search);
+        return $dataSet;
+    }
+
+    //个人组默认可以装载的其他数据对象
+    public function personalDatatypes(){
+        $repository=$this->repository('permission');
+        $dataSet=$repository->index(['personal'=>1]);
+        if($dataSet->count()==0){
+            return new Collection();
+        }
+        $ids=$dataSet->pluck('datatype_id')->unique()->toArray();
+        $repository = $this->repository('datatype');
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $dataSet = $repository->index($search);
+        return $dataSet;
+    }
+
+    //一个用户在该组内授权可以index的数据对象类型
+    public function authorizedDatatypes($parameters){
+        $repository = $this->repository('action');
+        $indexId = $repository->key('index');
+        $service=Zsystem::service('authorize');
+        $dataSet=$service->getParentPermissions($parameters['menuGroupId'],$parameters['userId'],null,$indexId);
+        if($dataSet->count()==0){
+            return $dataSet;
+        }
+        $ids=$dataSet->pluck('datatype_id')->unique()->toArray();
+        if(emptyObjectOrArray($ids)){
+            return new Collection();
+        }
+        $repository = $this->repository('datatype');
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $dataSet = $repository->index($search);
+        return $dataSet;
+    }
+
     //输入参数：groupId,datatypeId,userId
     //输出参数：datatypeId集合
     public function availableDatatype($parameters){
-
-        //datatypeId如果是组，寻找这个组内可用的数据对象
-        //如果是个人组，默认可以容纳部分类型
-        $groupId=$parameters['groupId'];
-        $userId=$parameters['userId'];
-        //平台管理员owner可以操作组内所有类型
-
-        $datatypeIds=[];
-        $personalGroupId=null;
-        if(!isset($parameters['personalGroupId'])) {
-            //如果已经选择了一个组，有了组ID，先看这个组有没有单独的数据类型限制
-            $repository = $this->repository('groupDatatype');
-            $dataSet = $repository->index(['group_id' => $groupId]);
-            if ($dataSet->count() > 0) {
-                $datatypeIds = $dataSet->pluck('datatype_id')->unique()->toArray();
-            }
-        }else{
-            //不是平台owner和管理员，要看他在该组的权限，能够index哪些datatype
-//            $personalGroupId=$parameters['personalGroupId'];
-            //首先找到index 的actionId
-            $repository = $this->repository('action');
-            $indexId = $repository->key('index');
-            //查看在该组可以index哪些类型
-            $service=Zsystem::service('authorize');
-            $dataSet=$service->getParentPermissions($groupId,$userId,null,$indexId);
-            if($dataSet->count()>0){
-                $datatypeIds=$dataSet->pluck('datatype_id')->unique()->toArray();
-            }
-        }
-
-        //如果是个人组，查看个人组默认的数据对象
-        //什么是个人组:owner_id有，owner_group_id为null
-        $repository=$this->repository('group');
-        $dataSet=$repository->fetch(['id'=>$groupId]);
-        if($dataSet->owner_id&&!isset($dataSet->owner_group_id)){
-            $repository=$this->repository('permission');
-            $dataSet=$repository->index(['personal'=>1]);
-            if($dataSet->count()>0){
-                $datatypeIds=array_merge($datatypeIds,$dataSet->pluck('datatype_id')->unique()->toArray());
-            }
-        }
-
-        if(!empty($datatypeIds)){
-            $search['search'][]=['field'=>'id','value'=>$datatypeIds,'filter'=>'in','algorithm'=>'or'];
-        }
-        if(!isset($search)){
+        //不是组，马上退出
+        //menuGroupId为null就不是组
+        if(!isset($parameters['menuGroupId'])){
             return new Collection();
         }
-        $repository=$this->repository('datatype');
-        $result=$repository->index($search);
-        return $result;
+        //如果当前用户是平台owner和管理员，那么datatype就是组配置的全部对象
+        //如果当前用户是普通用户，那么datatype就是组配置的全部对象，以及该用户的角色可index的对象类型的交集
+
+        //先把全部对象类型取出来
+        $personalGroupId=$parameters['personalGroupId'];
+        if(isset($personalGroupId)){
+            //如果是个人组
+            $dataSet=$this->personalDatatypes();
+        }else{
+            //不是个人组
+            $dataSet=$this->defaultDatatypes($parameters['menuDatatypeId']);
+        }
+        //单独配置的类型
+        $singleDataSet=$this->singleDatatypes($parameters['menuGroupId']);
+        //汇总一下
+        $dataSet=$dataSet->merge($singleDataSet);
+        //如果是平台管理员，现在就可以返回了
+        if(!isset($personalGroupId)){
+            return $dataSet;
+        }
+        //普通用户，查看他的权限
+        //查看在该组可以index哪些类型
+        $authorzieDataset=$this->authorizedDatatypes($parameters);
+        if($authorzieDataset->count()==0){
+            return $authorzieDataset;
+        }
+        //用户可以操作的，以及该组本身可以拥有的对象类型的差集~~~~~差集~~~~~~就是所求
+        return $authorzieDataset->intersect($dataSet);
+    }
+
+    public function authorizeAction($parameters){
+        $service=Zsystem::service('authorize');
+        $dataSet=$service->getParentPermissions($parameters['menuGroupId'],$parameters['userId'],$parameters['menuDatatypeId'],null);
+        if($dataSet->count()==0){
+            return $dataSet;
+        }
+        $ids=$dataSet->pluck('action_id')->unique()->toArray();
+        if(emptyObjectOrArray($ids)){
+            return new Collection();
+        }
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $repository=$this->repository('action');
+        return $repository->index($search);
+    }
+
+    //个人组默认的动作，要求当前用户是该组的所有人
+    public function personalAction($parameters){
+        if($parameters['menuGroupId']<>$parameters['personalGroupId']){
+            return new Collection();
+        }
+        $repository=Zsystem::repository('permission');
+        $dataSet=$repository->index(['personal'=>1]);
+        if($dataSet->count()==0){
+            return $dataSet;
+        }
+        $ids=$dataSet->pluck('action_id')->unique()->toArray();
+        if(emptyObjectOrArray($ids)){
+            return new Collection();
+        }
+        $search['search'][]=['field'=>'id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
+        $repository=$this->repository('action');
+        return $repository->index($search);
     }
 
     //输入参数：groupId,datatypeId,userId
     //输出参数：actionId集合
     //如果是个人组，默认有index权限
     public function availableAction($parameters){
-        //没有groupId的时候，是对全局进行操作，仅仅只有平台管理员和owner
-        $userId=$parameters['userId'];
-        $datatypeId=$parameters['menuDatatypeId'];
-        $search=null;
-        $groupId=null;
-        if(isset($parameters['groupId']))
-            {
-                $groupId=$parameters['groupId'];
-            }
-        $personalGroupId=null;
-        if(isset($parameters['personalGroupId'])){
-            $personalGroupId=$parameters['personalGroupId'];
+        //平台管理员和owner对一个对象类型，可以操作所有的动作
+        if(!isset($parameters['personalGroupId'])){
+            return $this->allAction($parameters);
+        }
+        //普通用户要一对一检查是否给其授权
+        $dataset= $this->authorizeAction($parameters);
+        //如果这个操作对象是一个个人组，并且该用户就是个人组的所有者，那还有默认授权的动作
+        $personalAction=$this->personalAction($parameters);
+        if($personalAction->count()>0){
+            $dataset= $dataset->merge($personalAction);
         }
 
-        $actionIds=[];
-        //如果是平台管理员owner，则直接从permission中获取该datatype的所有可用动作
-        $repository=Zsystem::repository('permission');
-        if(!isset($personalGroupId)){
-            $dataSet=$repository->index(['datatype_id'=>$datatypeId]);
-            if($dataSet->count()>0){
-                $actionIds=$dataSet->pluck('action_id')->unique()->toArray();
-            }
-        }else{
-            //如果不是个人组，或者是给个人组额外给了一些类型和动作，都是权限系统在处理
-            $service=Zsystem::service('authorize');
-            $dataSet=$service->getParentPermissions($groupId,$userId,$datatypeId,null);
-            if($dataSet->count()>0){
-                $actionIds=$dataSet->pluck('action_id')->unique()->toArray();
-            }
-//            else{
-//                if(isset($groupId)&&($groupId!=$personalGroupId)){
-//                    return new Collection();//如果没有任何可用数据类型，又不是个人组就要退出
-//                }
-//            }
-            //两种情况是个人组：1，没有groupId;2,groupId就是$personalGroupId。如果是个人组，有默认的动作
-            if(!isset($groupId)||($groupId==$personalGroupId)){
-                $dataSet=$repository->index(['personal'=>1]);
-                if($dataSet->count()>0){
-                    $actionIds=array_merge($actionIds,$dataSet->pluck('action_id')->unique()->toArray());
-                }
-            }
-        }
-
-        if(isset($actionIds)){
-            $search['search'][]=['field'=>'id','value'=>$actionIds,'filter'=>'in','algorithm'=>'or'];
-        }
-        if(!isset($search)){
-            return new Collection();
-        }
-        $repository=$this->repository('action');
-        $result=$repository->index($search);
-        return $result;
+        return $dataset;
     }
 
     //一个数据对象类型的全部可用动作，由permission来决定
@@ -236,7 +297,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         $repository=$this->repository('permission');
         $dataSet=$repository->getParentPermission(['datatype_id'=>$datatypeId]);
         if($dataSet->count()==0){
-            return;
+            return $dataSet;
         }
         $actionIds=$dataSet->pluck('action_id')->toArray();
         $repository=$this->repository('action');
