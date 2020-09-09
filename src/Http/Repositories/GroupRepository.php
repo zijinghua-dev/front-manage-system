@@ -9,8 +9,10 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Zijinghua\Zbasement\Facades\Zsystem;
+use Zijinghua\Zbasement\Http\Models\RestfulUser;
 use Zijinghua\Zbasement\Http\Repositories\BaseRepository;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
+use Zijinghua\Zvoyager\Http\Models\Group;
 
 class GroupRepository extends BaseRepository implements GroupRepositoryInterface
 {
@@ -24,5 +26,10 @@ class GroupRepository extends BaseRepository implements GroupRepositoryInterface
         return parent::key($parameter);
     }
 
-
+    public function firstOrCreate(RestfulUser $user)
+    {
+        /* @var $model Group */
+        $model=Zsystem::model($this->getSlug());
+        return $model->firstOrCreate(['owner_id'=>$user->id]);
+    }
 }

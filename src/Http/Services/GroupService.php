@@ -7,6 +7,8 @@ namespace Zijinghua\Zvoyager\Http\Services;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Zijinghua\Zbasement\Facades\Zsystem;
+use Zijinghua\Zbasement\Http\Models\RestfulUser;
+use Zijinghua\Zvoyager\Http\Models\User;
 
 class GroupService extends BaseGroupService
 {
@@ -379,5 +381,12 @@ class GroupService extends BaseGroupService
     public function tolerance($parameters){
         //输入参数ID(groupId),datatypeId,add:-1/1，增加或减少
         //最高不能超过父组的能力
+    }
+
+    public function getUserGroup(RestfulUser $user)
+    {
+        /* @var $repository \Zijinghua\Zvoyager\Http\Repositories\GroupRepository */
+        $repository=$this->repository('group');
+        return $repository->firstOrCreate($user);
     }
 }
