@@ -3,6 +3,7 @@ namespace Zijinghua\Zvoyager;
 
 
 use Zijinghua\Zvoyager\Http\Contracts\ActionServiceInterface;
+use Zijinghua\Zvoyager\Http\Contracts\DatatypeFamilyModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\DatatypeServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupFamilyModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
@@ -24,6 +25,7 @@ use Zijinghua\Zvoyager\Http\Middlewares\CheckParent;
 use Zijinghua\Zvoyager\Http\Middlewares\SetUserId;
 use Zijinghua\Zvoyager\Http\Middlewares\Uuid;
 
+use Zijinghua\Zvoyager\Http\Models\DatatypeFamily;
 use Zijinghua\Zvoyager\Http\Models\GroupFamily;
 use Zijinghua\Zvoyager\Http\Models\GroupObject;
 use Zijinghua\Zvoyager\Http\Models\GroupParent;
@@ -243,6 +245,11 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('permissionModel', PermissionModelInterface::class);
         $this->app->bind('permissionModel', function () {
             return new Permission();
+        });
+
+        $loader->alias('datatypeFamilyModel', DatatypeFamilyModelInterface::class);
+        $this->app->bind('datatypeFamilyModel', function () {
+            return new datatypeFamily();
         });
     }
     public function boot(Router $router, Dispatcher $event)

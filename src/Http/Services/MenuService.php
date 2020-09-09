@@ -69,6 +69,9 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
             return $parameters['menuGroupId'];
         }
         $datatypeId=$parameters['menuDatatypeId'];
+        if(!isset($parameters['menuObjectId'])){
+            return;
+        }
         $objectId=$parameters['menuObjectId'];
         $repository=$this->repository('datatype');
         $datatype=$repository->fetch(['id'=>$datatypeId]);
@@ -139,9 +142,22 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     }
 
     //一个容器数据对象，默认可以装载哪些对象
-    public function defaultDatatypes($datatypeId){
+    public function normalDatatypes($parameters){
+        //如果是个人组，退出
+        if(!isset($parameters['groupId'])){
+            return new Collection();
+        }
+        $repository=$this->repository('group');
+        $group=$repository->fetch(['id'=>$parameters['groupId']]);
+        if(!isset($group)){
+            return new Collection();
+        }
+        if(isset($group->owner_id)&&!isset($group->owner_group_id)){
+            return new Collection();
+        }
+
         $repository = $this->repository('datatypeFamily');
-        $dataSet = $repository->index(['datatype_id' => $datatypeId]);
+        $dataSet = $repository->index(['datatype_id' => $parameters['menuDatatypeId']]);
         if($dataSet->count()==0){
             return new Collection();
         }
@@ -168,7 +184,19 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     }
 
     //个人组默认可以装载的其他数据对象
-    public function personalDatatypes(){
+    public function personalDatatypes($parameters){
+        //如果当前组不是个人组，返回空集
+        if(!isset($parameters['groupId'])){
+            return new Collection();
+        }
+        $repository=$this->repository('group');
+        $group=$repository->fetch(['id'=>$parameters['groupId']]);
+        if(!isset($group)){
+            return new Collection();
+        }
+        if(!isset($group->owner_id)||isset($group->owner_group_id)){
+            return new Collection();
+        }
         $repository=$this->repository('permission');
         $dataSet=$repository->index(['personal'=>1]);
         if($dataSet->count()==0){
@@ -204,31 +232,37 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     //输出参数：datatypeId集合
     public function availableDatatype($parameters){
         //不是组，马上退出
-        //menuGroupId为null就不是组
-        if(!isset($parameters['menuGroupId'])){
+        //如果选择了一个组，groupId不为null；如果是个人组，groupId也不为null
+        if(!isset($parameters['groupId'])){
             return new Collection();
         }
         //如果当前用户是平台owner和管理员，那么datatype就是组配置的全部对象
         //如果当前用户是普通用户，那么datatype就是组配置的全部对象，以及该用户的角色可index的对象类型的交集
 
         //先把全部对象类型取出来
-        $personalGroupId=$parameters['personalGroupId'];
-        if(isset($personalGroupId)){
-            //如果是个人组
-            $dataSet=$this->personalDatatypes();
-        }else{
-            //不是个人组
-            $dataSet=$this->defaultDatatypes($parameters['menuDatatypeId']);
-        }
+
+            //如果是个人组，取个人组可容纳的对象类型
+        $dataSet=$this->personalDatatypes($parameters);
+
+        //不是个人组，取普通组可容纳的对象类型
+        $normalDataSet=$this->normalDatatypes($parameters);
+        //汇总一下,其实，这两个集合，必然一个为空
+        $dataSet=$dataSet->merge($normalDataSet);
+
         //单独配置的类型
-        $singleDataSet=$this->singleDatatypes($parameters['menuGroupId']);
+        $singleDataSet=$this->singleDatatypes($parameters['groupId']);
         //汇总一下
         $dataSet=$dataSet->merge($singleDataSet);
         //如果是平台管理员，现在就可以返回了
-        if(!isset($personalGroupId)){
+        if(!isset($parameters['personalGroupId'])){
             return $dataSet;
         }
-        //普通用户，查看他的权限
+        //普通用户，如果进的不是自己的个人组，还要查看他的权限
+        //如果是自己的个人组，现在可以返回了
+        if($parameters['groupId']==$parameters['personalGroupId']){
+            return $dataSet;
+        }
+
         //查看在该组可以index哪些类型
         $authorzieDataset=$this->authorizedDatatypes($parameters);
         if($authorzieDataset->count()==0){
@@ -240,7 +274,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 
     public function authorizeAction($parameters){
         $service=Zsystem::service('authorize');
-        $dataSet=$service->getParentPermissions($parameters['menuGroupId'],$parameters['userId'],$parameters['menuDatatypeId'],null);
+        $dataSet=$service->getParentPermissions($parameters['groupId'],$parameters['userId'],$parameters['menuDatatypeId'],null);
         if($dataSet->count()==0){
             return $dataSet;
         }
@@ -255,7 +289,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 
     //个人组默认的动作，要求当前用户是该组的所有人
     public function personalAction($parameters){
-        if($parameters['menuGroupId']<>$parameters['personalGroupId']){
+        if($parameters['groupId']<>$parameters['personalGroupId']){
             return new Collection();
         }
         $repository=Zsystem::repository('permission');
