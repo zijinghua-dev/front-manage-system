@@ -84,11 +84,16 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     //必传 menuDatatypeId
     protected function secondMenus($parameters){
         $datatypes=[];
-        //由于前端点击菜单项，只能传递personGroupID，和菜单项 menuDatatypeId， 并没有GroupID，所以，
-        //我们认为，menuDatatypeId为空的时候，是一级菜单，GroupID是personGroupID；
-        //当menuDatatypeId不为空的时候，是二级菜单，GroupID是menuDatatypeId对应的menuGroupId；
+        //由于前端点击菜单项，只能传递menuGroupID，和菜单项 menuDatatypeId， 并没有GroupID，所以，
+        //一级菜单的GroupID是personGroupID，如果是平台管理员，没有personGroupID，是全局；
+        //二级菜单：如果明确传递了menuGroupId，GroupID是menuGroupId，如果没有传递menuGroupId，就是menuDatatypeId对应的menuGroupId；
         if(isset($parameters['menuObjectId'])&&isset($parameters['menuDatatypeId'])){
-            $groupId=$this->getMenuGroupId($parameters['menuDatatypeId'],$parameters['menuObjectId']);
+            if(isset($parameters['menuGroupId'])){
+                $groupId=$parameters['menuGroupId'];
+            }else{
+                $groupId=$this->getMenuGroupId($parameters['menuDatatypeId'],$parameters['menuObjectId']);
+            }
+
             if(isset($groupId)){
                 $parameters['groupId']=$groupId;
                 $datatypes=$this->availableDatatype($parameters);//没有指定当前组，是没有可包容的数据类型的
