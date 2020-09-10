@@ -114,7 +114,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 //            $parameters=$this->parameters($parameters);
 //        }
         //如果personGroupId为null，代表是平台admin和平台owner
-        if(!isset($parameters['personGroupId'])){
+        if(!isset($parameters['personalGroupId'])){
             $repository=$this->repository('datatype');
             $dataSet=$repository->index(['menu_level'=>1]);
             return $dataSet;
