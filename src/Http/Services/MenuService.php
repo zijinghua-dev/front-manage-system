@@ -12,12 +12,13 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 {
     //请求参数：menuDatatypeId，menuLever，menuObjectId（默认：personalGroupId，用户的个人组，不发送也可以后台解析）；
     //menuLever：1，第一级；2，第二季；3，两级同传；
-    //menuDatatypeId,点击一级菜单，发送对应菜单项；点击二级菜单项，发送menuDatatypeId，contentObjectId
-    //menuObjectId，menuDatatypeId，都是用户选择的当前项，当用户点击列表，选择一项，即为menuObjectId，而menuDatatypeId是从菜单上获得的
-    //当用户发送menuDatatypeId，意味着至少在topMenus上选择了一项，可以返回二级菜单了
-    //如果用户发送menuObjectId，意味着至少在列表中选择了一项，可以返回该组内的datatype了
+    //当用户点击顶级菜单项，只有menuDatatypeId；如果不点击列表，仅仅只点击二级菜单项，也只有menuDatatypeId；view/edit/delete其实是在点击列表项后，才能点击的
+    //点击列表中选项，就有 menuObjectId，和menuDatatypeId
+    //返回数据后，前端要将datatypeId附着到二级菜单和列表项中，再次请求时，要将datatypeId传送过来
     public function index($parameters)
     {
+        //personalGroupId，当前用户的个人组ID；当前选择的object对应的GroupId；isPersonalGroup，当前选择的object是不是个人组;
+        //groupId，当前操作在那个组内
         //如果传递了MenuDatatype，没有MenuGroup，查看是否是group
         if(!isset( $parameters['personalGroupId'])){
             $parameters['personalGroupId']=$this->getPersonalGroupId($parameters['userId']);
@@ -41,6 +42,18 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         }
         $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success',$result);
         return $messageResponse;
+    }
+
+    protected function isPersonalGroup($groupId){
+        $repository=$this->repository('group');
+        $group=$repository->fetch(['id'=>$groupId]);
+        if(!isset($group)){
+            return false;
+        }
+        if(!isset($group->owner_id)||isset($group->owner_group_id)){
+            return false;
+        }
+        return true;
     }
 
     protected function getCurrentGroupId($parameters){
@@ -141,18 +154,13 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         return ['topMenu'=>$topMenus,'secondMenu'=>$secondMenus];
     }
 
-    //一个容器数据对象，默认可以装载哪些对象
+    //一个普通的容器数据对象，不是个人组，默认可以装载哪些对象
     public function normalDatatypes($parameters){
         //如果是个人组，退出
         if(!isset($parameters['groupId'])){
             return new Collection();
         }
-        $repository=$this->repository('group');
-        $group=$repository->fetch(['id'=>$parameters['groupId']]);
-        if(!isset($group)){
-            return new Collection();
-        }
-        if(isset($group->owner_id)&&!isset($group->owner_group_id)){
+        if($this->isPersonalGroup($parameters['groupId'])){
             return new Collection();
         }
 
@@ -189,12 +197,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         if(!isset($parameters['groupId'])){
             return new Collection();
         }
-        $repository=$this->repository('group');
-        $group=$repository->fetch(['id'=>$parameters['groupId']]);
-        if(!isset($group)){
-            return new Collection();
-        }
-        if(!isset($group->owner_id)||isset($group->owner_group_id)){
+        if(!$this->isPersonalGroup($parameters['groupId'])){
             return new Collection();
         }
         $repository=$this->repository('permission');
