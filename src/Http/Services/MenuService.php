@@ -332,7 +332,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     public function allAction($parameters){
         $datatypeId=$parameters['menuDatatypeId'];
         $repository=$this->repository('permission');
-        $dataSet=$repository->getParentPermission(['datatype_id'=>$datatypeId]);
+        $dataSet=$repository->index(['datatype_id'=>$datatypeId]);
         if($dataSet->count()==0){
             return $dataSet;
         }
