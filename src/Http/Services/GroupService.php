@@ -247,6 +247,7 @@ class GroupService extends BaseGroupService
     //返回创建的group记录,如果有父组，还要在groupObject中创建一条记录
     public function store($parameters)
     {
+        //先创建组
         if($this->getSlug()!='group'){
             $this->setSlug('group');
         }
@@ -267,6 +268,7 @@ class GroupService extends BaseGroupService
 //            $data['schedule_end']=$parameters['scheduleEnd'];
 //        }
         $result=$repository->store($data);
+        //如果有父组，还要把本组放进父组，更改groupFamily和groupParent
         if(isset($parameters['groupId'])){
             unset($data);
             $data=Arr::only($parameters,['datatypeId','objectId','groupId']);

@@ -270,8 +270,8 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
         if(isset($parameters['describe'])){
             $data['describe']=$parameters['describe'];
         }
+        //创建organize本身
         $repository=$this->repository('organize');
-
         $result=$repository->store($data);
         unset($data);
         $data=Arr::only($parameters,['userId','groupId','datatypeId']);
@@ -280,16 +280,30 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
         //重新将获得的groupID保存到organize里
         $repository=$this->repository('organize');
         $result=$repository->update(['id'=>$result->id,'group_id'=>$group->id]);
+//        $result->groupId=$group->id;
+        return $result;
     }
 
+    //如果一个普通用户有权创建组，父组应当是当前组，创建完毕后，应当把用户加到当前组，给当前用户赋予默认的owner角色，这样，用户能够继续给组添加角色，添加权限，添加用户
     public function store($parameters)
     {
         DB::beginTransaction();
         try {
+            //首先是创建organize本身，以及organize映射的组
             $result=$this->create($parameters);
+            //如果当前用户不是平台owner和admin
+            $service=Zsystem::service('authorize');
+            if(!$service->isPlatformOwner($parameters['userId'])&&!$service->isPlatformAdmin($parameters['userId'])){
+                $data=['groupId'=>$result->group_id,'userId'=>$parameters['userId']];
+                $this->addUserToGroup($data);//添加用户到组内
+                $this->authorizeOwner($data);//给用户配置默认所有人角色
+                $data=['userId'=>$parameters['userId'],'datatypeId'=>$parameters['datatypeId'],'objectId'=>$result->id];
+                //因为当前用户是创建者，拥有index权限，所以将该组添加到该用户的个人组；其他地方应当判断是否有index权限，没有权限，不能添加到个人组
+                $this->addObjectToPersonalGroup($data);//添加用户的个人组
+            }
             DB::commit();
 
-            $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.success');
+            $messageResponse=$this->messageResponse($this->getSlug(),'store.submit.success',$result);
             return $messageResponse;
         } catch (Exception $e) {
             DB::rollback();
@@ -299,9 +313,38 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
         return $messageResponse;
     }
 
+    protected function addUserToGroup($parameters){
+        $repository=$this->repository('datatype');
+        $userDatatypeId=$repository->key('user');
+        $repository=$this->repository('groupObject');
+        $result=$repository->store(['datatype_id'=>$userDatatypeId,'object_id'=>$parameters['userId'],'group_id'=>$parameters['groupId']]);
+    }
 
+    protected function authorizeOwner($parameters){
+        //先找owner角色
+        $repository=$this->repository('role');
+        $ownerRole=$repository->fetch(['name'=>'owner','default'=>1]);
+        if(!isset($ownerRole)){
+            return;//这里要报异常
+        }
+        //为用户添加角色
+        $repository=$this->repository('groupUserRole');
+        $result=$repository->store(['group_id'=>$parameters['groupId'],'role_id'=>$ownerRole->id,'user_id'=>$parameters['userId']]);
+    }
 
-
+    protected function addObjectToPersonalGroup($parameters){
+        //当前用户是否有个人组
+        $repository=$this->repository('group');
+        $result=$repository->fetch(['owner_id'=>$parameters['userId'],'owner_group_id'=>null]);
+        if(!isset($result)){
+            return;
+        }
+        $repository=$this->repository('datatype');
+        $groupDatatypeId=$repository->key('group');
+        $repository=$this->repository('groupObject');
+        $result=$repository->store(['datatype_id'=>$parameters['datatypeId'],'object_id'=>$parameters['objectId'],
+            'group_id'=>$result->id]);
+    }
 
 //    public function expand($parameters){
 //        $model=$this->model('groupDatatype');

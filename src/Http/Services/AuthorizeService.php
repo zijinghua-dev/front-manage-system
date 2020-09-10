@@ -50,6 +50,11 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $permissions;
     }
 
+//    //默认的权限，许可给每一个人
+//    public function checkDefaultPermission($parameters){
+//
+//    }
+
     public function checkPlatformOwnerPermission($parameters){
         //只要是平台owner组成员，或者是平台owner组的owner，都可以授权
         //先找到平台owner组
@@ -448,6 +453,12 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
 //        $userId,$groupId,$dataTypeId,$objectId,$actionId
         //更换
         try{
+//            $result=$this->checkDefaultPermission($parameters);
+//            if($result){
+//                $messageResponse=$this->messageResponse($parameters['slug'],'authorize.submit.success');
+//                return $messageResponse;
+//            }
+
             $result=$this->checkPlatformOwnerPermission($parameters);
             if($result){
                 $messageResponse=$this->messageResponse($parameters['slug'],'authorize.submit.success');
@@ -759,6 +770,41 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $result;
     }
 
+    protected function getAvailableRoleId($groupId,$userId){
+        $repository=Zsystem::repository('groupUserRole');
+        unset($search);
+        $search['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'enabled','value'=>1,'filter'=>'=','algorithm'=>'and'];
+        $result=$repository->index($search);
+        $roleSet=[];
+        if($result->count()>0){
+
+            //同时剔除已经时间无效的角色
+            foreach ($result as $key=>$role){
+                if((($role->schedule_begin==null)&&($role->schedule_end==null))||($role->schedule_begin<time()&&$role->schedule_end>time())){
+                    $roleSet[]=$role->role_id;
+                }
+            }
+        }
+        return $roleSet;
+    }
+
+    protected function getDefaultRolePermissionId($roleIds){
+        $repository=Zsystem::repository('permissionRole');
+        $search['search'][]=['field'=>'role_id','value'=>$roleIds,'filter'=>'in','algorithm'=>'and'];
+        $result = $repository->index($search);
+        return $result;
+    }
+
+    protected function getSingleRolePermissionId($groupId,$roleIds){
+        $repository=Zsystem::repository('groupRolePermission');
+        $search['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
+        $search['search'][]=['field'=>'role_id','value'=>$roleIds,'filter'=>'in','algorithm'=>'and'];
+        $result = $repository->index($search);
+        return $result;
+    }
+
     //如果$datatypeId,$actionId任一为空，返回用户在该组全部权限，数据集
     //如果$datatypeId,$actionId都不为空，返回用户在该组该权限，单条记录，如果没有即为null
     public function getParentPermissions($groupId,$userId,$datatypeId,$actionId){
@@ -773,34 +819,20 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         $permissions=new Collection();
         foreach ($groupIds as $key=>$item){
             //依次找到找到该用户在不同组的全部角色
-            $repository=Zsystem::repository('groupUserRole');
-            unset($search);
-            $search['search'][]=['field'=>'group_id','value'=>$item,'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'user_id','value'=>$userId,'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'enabled','value'=>1,'filter'=>'=','algorithm'=>'and'];
-            $result=$repository->index($search);
-            $roleSet=[];
-            if($result->count()>0){
-
-                //同时剔除已经时间无效的角色
-                foreach ($result as $key=>$role){
-                    if((($role->schedule_begin==null)&&($role->schedule_end==null))||($role->schedule_begin<time()&&$role->schedule_end>time())){
-                        $roleSet[]=$role->role_id;
-                    }
-                }
-            }
-
-            //这些角色有哪些权限
-            $repository=Zsystem::repository('groupRolePermission');
-            unset($search);
-            $search['search'][]=['field'=>'group_id','value'=>$item,'filter'=>'=','algorithm'=>'and'];
-            $search['search'][]=['field'=>'role_id','value'=>$roleSet,'filter'=>'in','algorithm'=>'and'];
-            $permissions =$permissions->concat(  $repository->index($search));//源组的操作权限全部取出来了
+            $roleIds=$this->getAvailableRoleId($item,$userId);
+            //是默认角色吗？
+            $defaultPermissionIds=$this->getDefaultRolePermissionId($roleIds);
+            $permissions =$permissions->concat(  $defaultPermissionIds);
+            //这些角色有哪些单独赋予的权限
+            $singlePermissionIds=$this->getSingleRolePermissionId($item,$roleIds);
+            $permissions =$permissions->concat(  $singlePermissionIds);//源组的操作权限全部取出来了
         }
+        //同时穿了$datatypeId和$actionId，其实只是想获得是否存在，布尔
         if(isset($datatypeId)&&isset($actionId)) {
             $result = $permissions->where('datatype_id',$datatypeId)->where('action_id',$actionId)->first();//源组的操作权限全部取出来了
             return $result;
         }
+        //传$datatypeId，想要actionId
         if(isset($datatypeId)){
             $result = $permissions->where('datatype_id',$datatypeId);
         }

@@ -17,6 +17,7 @@ use Zijinghua\Zvoyager\Http\Contracts\OrganizeModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\OrganizeServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\PermissionModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\PermissionRoleModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
@@ -35,6 +36,7 @@ use Zijinghua\Zvoyager\Http\Models\GroupRolePermission;
 use Zijinghua\Zvoyager\Http\Models\GroupUserObjectPermission;
 use Zijinghua\Zvoyager\Http\Models\Organize;
 use Zijinghua\Zvoyager\Http\Models\Permission;
+use Zijinghua\Zvoyager\Http\Models\PermissionRole;
 use Zijinghua\Zvoyager\Http\Models\Role;
 use Zijinghua\Zvoyager\Http\Repositories\ActionRepository;
 use Zijinghua\Zbasement\Http\Repositories\Contracts\UserRepositoryInterface;
@@ -250,6 +252,11 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('datatypeFamilyModel', DatatypeFamilyModelInterface::class);
         $this->app->bind('datatypeFamilyModel', function () {
             return new datatypeFamily();
+        });
+
+        $loader->alias('permissionRoleModel', PermissionRoleModelInterface::class);
+        $this->app->bind('permissionRoleModel', function () {
+            return new PermissionRole();
         });
     }
     public function boot(Router $router, Dispatcher $event)
