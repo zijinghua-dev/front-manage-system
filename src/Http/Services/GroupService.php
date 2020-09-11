@@ -375,6 +375,7 @@ class GroupService extends BaseGroupService
         }
         $repository=$this->repository($parameters['slug']);
         $result=$repository->index($search);
+        //current_group_id
         $messageResponse=$this->messageResponse($parameters['slug'],'index.submit.success',$result);
         return $messageResponse;
     }

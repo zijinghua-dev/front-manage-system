@@ -805,17 +805,42 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         return $result;
     }
 
+    //不是父子关系，当前组被那些组包含
+    protected function getGroupIdInGroup($groupId){
+        //当前组是什么类型
+        $repository=Zsystem::repository('group');
+        $group=$repository->fetch(['id'=>$groupId]);
+
+        $repository=Zsystem::repository('groupObject');
+        $result=$repository->index(['datatype_id'=>$group->datatype_id,'object_id'=>$group->object_id]);
+        if($result->count()==0) {
+            return [];
+        }
+        return $result->pluck('group_id')->unique()->toArray();
+    }
+
+    protected function getParentGroupId($groupIds){
+        //当前组是什么类型
+        $result=[];
+        $repository=Zsystem::repository('groupParent');
+        $search['search'][]=['field'=>'group_id','value'=>$groupIds,'filter'=>'in','algorithm'=>'and'];
+        $result=$repository->index($search);
+        if($result->count()>0){
+            $result=$result->pluck('parent_id')->unique()->toArray();
+        }
+        return $result;
+    }
+
     //如果$datatypeId,$actionId任一为空，返回用户在该组全部权限，数据集
     //如果$datatypeId,$actionId都不为空，返回用户在该组该权限，单条记录，如果没有即为null
     public function getParentPermissions($groupId,$userId,$datatypeId,$actionId){
-        //找出这个组的全部父组
-        $repository=Zsystem::repository('groupParent');
-        $search['search'][]=['field'=>'group_id','value'=>$groupId,'filter'=>'=','algorithm'=>'and'];
-        $result=$repository->index($search);
-        if($result->count()>0){
-            $groupIds=$result->pluck('parent_id')->toArray();
-        }
+        //找出当前组被哪些组所包含
+        $ids=$this->getGroupIdInGroup($groupId);
+        $ids[]=$groupId;
+        //找出这些组的全部父组
+        $groupIds=$this->getParentGroupId($ids);
         $groupIds[]=$groupId;
+        //这个组都在哪些组内作为普通对象
         $permissions=new Collection();
         foreach ($groupIds as $key=>$item){
             //依次找到找到该用户在不同组的全部角色
