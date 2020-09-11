@@ -352,7 +352,7 @@ class GroupService extends BaseGroupService
         //因为当前是组类型，所以，要返回特定标志currentGroupId
 
         $resource=$this->getResource($this->getSlug(),'show');
-        $messageResponse=$this->messageResponse($this->getSlug(),'show.submit.success', $result,$resource,['currentGroupId'=>$result->group_id]);
+        $messageResponse=$this->messageResponse($this->getSlug(),'show.submit.success', $result,$resource,['objectGroupId'=>$result->group_id]);
         return $messageResponse;
     }
 
@@ -368,7 +368,7 @@ class GroupService extends BaseGroupService
         //如果$result为null或空，那么意味着刚刚删除掉这个数据，应该报异常
 //        $code='zbasement.code.'.$this->slug.'.show.success';
         $resource=$this->getResource($this->getSlug(),'show');
-        $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.success', $result,$resource,['currentGroupId'=>$result->group_id]);
+        $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.success', $result,$resource);
         return $messageResponse;
     }
 
