@@ -135,7 +135,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         $actions=['edit','show'];
         $repository=Zsystem::repository('action');
         $search['search'][]=['field'=>'name','value'=>$actions,'filter'=>'in','algorithm'=>'or'];
-        $search['search'][]=['field'=>'name','value'=>$actions,'filter'=>'in','algorithm'=>'or'];
+        $search['search'][]=['field'=>'alias','value'=>$actions,'filter'=>'in','algorithm'=>'or'];
         $actions=$repository->index($search);
         if($actions->count()>0){
             $result= $actions->where('id',$id);
@@ -247,7 +247,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         $repository = $this->repository('action');
         $indexId = $repository->key('index');
         $service=Zsystem::service('authorize');
-        $dataSet=$service->getParentPermissions($parameters['objectGroupId'],$parameters['userId'],null,$indexId);
+        $dataSet=$service->getParentPermissions($parameters['groupId'],$parameters['userId'],null,$indexId);
         if($dataSet->count()==0){
             return $dataSet;
         }
