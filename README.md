@@ -40,52 +40,12 @@
             }
         });
     }
-#修改login方法中，获取凭证的逻辑
 ~~~
->修改login方法
+5.修改auth中间件
+>修改App\Http下的Kernel.php文件，更换auth中间件，当token生存周期结束时，刷新token
 ~~~php
-    /**
-     * Get a JWT via given credentials.
-     *
-     * @param LoginRequest  $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function login(LoginRequest $request)
-    {
-        //现有获取凭证的逻辑
-        //$credentials = $request->all(['username', 'password']);
-        //修改后的获取凭证逻辑 
-        $this->setCredentials($request);
-        $credentials = $this->credentials;
-        
-        /* @var $guard \Tymon\JWTAuth\JWTGuard */
-        $guard = auth('api');
-
-        event(new Api\RetrieveTokenAttemptingEvent($credentials));
-        // 获取登陆结果
-        $result = $guard->attempt($credentials);
-        // 如果返回结果不是token，则返回用户中心的错误提示信息
-        if (is_string($result)) {
-            event(new Api\TokenGeneratedEvent($guard));
-            return $this->respondWithToken($result);
-        } else {
-            event(new Api\RetrieveTokenFailureEvent($credentials));
-            return $this->toResopnse($result);
-        }
-    }
-~~~
->增加错误输出方法
-~~~php
-    /**
-     * Get the response
-     * @param $response
-     * @return \Illuminate\Http\JsonResponse
-     */
-    protected function toResopnse($response)
-    {
-        return response()->json($response);
-    }
+// 'auth' => \App\Http\Middleware\Authenticate::class,修改如下
+'auth' => \Zijinghua\Zvoyager\Http\Middlewares\Authenticate::class,
 ~~~
 
 
