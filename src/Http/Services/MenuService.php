@@ -10,12 +10,11 @@ use Zijinghua\Zvoyager\Http\Contracts\MenuServiceInterface;
 
 class MenuService extends BaseGroupService implements MenuServiceInterface
 {
-    //请求参数：objectGroupId,menuDatatypeId，menuLever（返回菜单1，第一级；2，第二季；3，两级同传），menuSource（请求来源：1，顶级菜单；2，二级菜单）；menuType（请求菜单类型，1，action；2,datatype）；
-    //当用户点击顶级菜单项，只有menuDatatypeId；返回二级菜单的action列表，后台计算个人组ID附带返回。
-    //点击二级菜单的action，发送menuDatatypeId和groupId,menutype=2
-    ////返回：如果当前groupId不为null，返回datatype列表，action列表不变；前端根据前端逻辑，决定datatype列表的显示或者隐藏（index不显示，show/edit显示）
-    //点击二级菜单的datatype，发送menuDatatypeId和groupId和menuType=1
-    ////返回：action列表，以及接收到的groupId
+    //请求参数：actionGroupId,datatypeGroupId，menuDatatypeId，menuActionId，
+    //menuLever（返回菜单1，第一级；2，第二季；3，两级同传），menuType(点击类型：1，action；2，datatype）
+    //当用户点击顶级菜单项，发送menuDatatypeId，menuType=2，datatypeGroupId可能null，其余为null；返回二级菜单的action列表，传入的datatypeGroupId原路传回。
+    //点击二级菜单的action，发送menuActionId和actionGroupId,menutype=1；返回二级菜单的action列表，如果有datatype，返回datatype
+    //点击二级菜单的datatype，发送menuDatatypeId和dataGroupId和menuType=2;返回action列表
     public function index($parameters)
     {
         //personalGroupId，当前用户的个人组ID；当前选择的object对应的GroupId；isPersonalGroup，当前选择的object是不是个人组;
