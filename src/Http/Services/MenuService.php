@@ -5,16 +5,17 @@ namespace Zijinghua\Zvoyager\Http\Services;
 
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zvoyager\Http\Contracts\MenuServiceInterface;
 
 class MenuService extends BaseGroupService implements MenuServiceInterface
 {
-    //请求参数：actionGroupId,datatypeGroupId，menuDatatypeId，menuActionId，
+    //请求参数：menuGroupId,objectGroupId，menuDatatypeId，menuActionId，
     //menuLever（返回菜单1，第一级；2，第二季；3，两级同传），menuType(点击类型：1，action；2，datatype）
-    //当用户点击顶级菜单项，发送menuDatatypeId，menuType=2，datatypeGroupId可能null，其余为null；返回二级菜单的action列表，传入的datatypeGroupId原路传回。
-    //点击二级菜单的action，发送menuActionId和actionGroupId,menutype=1；返回二级菜单的action列表，如果有datatype，返回datatype
-    //点击二级菜单的datatype，发送menuDatatypeId和dataGroupId和menuType=2;返回action列表
+    //当用户点击顶级菜单项，发送menuDatatypeId，menuType=2，menuGroupId可能null，其余为null；返回二级菜单的action列表，传入的menuGroupId原路传回。
+    //点击二级菜单的action，发送menuActionId、menuGroupId，objectGroupId,menutype=1；返回二级菜单的action列表，如果有datatype，返回datatype列表
+    //点击二级菜单的datatype，发送menuDatatypeId、objectGroupId和menuType=2;返回action列表
     public function index($parameters)
     {
         //personalGroupId，当前用户的个人组ID；当前选择的object对应的GroupId；isPersonalGroup，当前选择的object是不是个人组;
@@ -143,25 +144,42 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
             }
         }
     }
-    //点击二级菜单的action，发送menuDatatypeId和groupId,menutype=2，menuActionId；index无需处理，show,edit要处理
-    ////返回：如果当前groupId不为null，返回datatype列表，action列表不变；前端根据前端逻辑，决定datatype列表的显示或者隐藏（index不显示，show/edit显示）
-    //点击二级菜单的datatype，发送menuDatatypeId和groupId和menuType=1
-    ////返回：action列表，以及接收到的groupId
+
+    //点击二级菜单的action，发送menuActionId、menuGroupId，objectGroupId,menutype=1；返回二级菜单的action列表，如果有datatype，返回datatype列表
+    //点击二级菜单的datatype，发送menuDatatypeId、objectGroupId和menuType=2;返回action列表
     protected function secondMenus($parameters){
         //点击action,必传menuActionId
-        if(isset($parameters['menuActionId'])){
-            if($this->getActionsHasDatatype($parameters['menuActionId'])){
-                if($parameters['menuType']==2){
-                    $datatypes=$this->availableDatatype($parameters);
-                    return ['datatype'=>$datatypes];
-                }
-            }
-        }else{
-            if($parameters['menuType']==1){
+        $datatypes=null;
+        $actions=null;
+        switch($parameters['menuType']){
+            case 1://点击action
                 $actions=$this->availableAction($parameters);
-                return ['action'=>$actions];
-            }
+                if($this->getActionsHasDatatype($parameters['menuActionId'])){
+                        $datatypes=$this->availableDatatype($parameters);
+                }
+                return ['datatype'=>$datatypes,'action'=>$actions,'menuGroupId'=>$parameters['menuGroupId'],'objectGroupId'=>$parameters['objectGroupId']];
+            default://点击datatype
+                //因为这里开始切换当前组了，所以要处理一下参数，
+                $menuGroupId=$parameters['objectGroupId'];
+                $parameters=Arr::forget($parameters,['menuGroupId','objectGroupId']);
+                $parameters['menuGroupId']=$menuGroupId;
+                $actions=$this->availableAction($parameters);
+                return ['datatype'=>null,'action'=>$actions,'menuGroupId'=>$parameters['objectGroupId']];
         }
+
+//        if(isset($parameters['menuActionId'])){
+//            if($this->getActionsHasDatatype($parameters['menuActionId'])){
+//                if($parameters['menuType']==2){
+//                    $datatypes=$this->availableDatatype($parameters);
+//                    return ['datatype'=>$datatypes];
+//                }
+//            }
+//        }else{
+//            if($parameters['menuType']==1){
+//                $actions=$this->availableAction($parameters);
+//                return ['action'=>$actions];
+//            }
+//        }
 //        $datatypes=[];
 //        //由于前端点击菜单项，只能传递menuObject，和菜单项 menuDatatypeId， 并没有GroupID，所以，
 //        //一级菜单的GroupID是personGroupID，如果是平台管理员，没有personGroupID，是全局；
@@ -186,10 +204,10 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     //一个普通的容器数据对象，不是个人组，默认可以装载哪些对象
     public function normalDatatypes($parameters){
         //如果是个人组，退出
-        if(!isset($parameters['groupId'])){
+        if(!isset($parameters['objectGroupId'])){
             return new Collection();
         }
-        if($this->isPersonalGroup($parameters['groupId'])){
+        if($this->isPersonalGroup($parameters['objectGroupId'])){
             return new Collection();
         }
 
@@ -223,10 +241,10 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     //个人组默认可以装载的其他数据对象
     public function personalDatatypes($parameters){
         //如果当前组不是个人组，返回空集
-        if(!isset($parameters['groupId'])){
+        if(!isset($parameters['objectGroupId'])){
             return new Collection();
         }
-        if(!$this->isPersonalGroup($parameters['groupId'])){
+        if(!$this->isPersonalGroup($parameters['objectGroupId'])){
             return new Collection();
         }
         $repository=$this->repository('permission');
@@ -246,7 +264,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         $repository = $this->repository('action');
         $indexId = $repository->key('index');
         $service=Zsystem::service('authorize');
-        $dataSet=$service->getParentPermissions($parameters['groupId'],$parameters['userId'],null,$indexId);
+        $dataSet=$service->getParentPermissions($parameters['objectGroupId'],$parameters['userId'],null,$indexId);
         if($dataSet->count()==0){
             return $dataSet;
         }
@@ -265,7 +283,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     public function availableDatatype($parameters){
         //不是组，马上退出
         //如果选择了一个组，groupId不为null；如果是个人组，groupId也不为null
-        if(!isset($parameters['groupId'])){
+        if(!isset($parameters['objectGroupId'])){
             return new Collection();
         }
         //如果当前用户是平台owner和管理员，那么datatype就是组配置的全部对象
@@ -282,7 +300,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         $dataSet=$dataSet->merge($normalDataSet);
 
         //单独配置的类型
-        $singleDataSet=$this->singleDatatypes($parameters['groupId']);
+        $singleDataSet=$this->singleDatatypes($parameters['objectGroupId']);
         //汇总一下
         $dataSet=$dataSet->merge($singleDataSet);
         //如果是平台管理员，现在就可以返回了
@@ -291,7 +309,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         }
         //普通用户，如果进的不是自己的个人组，还要查看他的权限
         //如果是自己的个人组，现在可以返回了
-        if($parameters['groupId']==$parameters['personalGroupId']){
+        if($parameters['objectGroupId']==$parameters['personalGroupId']){
             return $dataSet;
         }
 
@@ -306,7 +324,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 
     public function authorizeAction($parameters){
         $service=Zsystem::service('authorize');
-        $dataSet=$service->getParentPermissions($parameters['groupId'],$parameters['userId'],$parameters['menuDatatypeId'],null);
+        $dataSet=$service->getParentPermissions($parameters['menuGroupId'],$parameters['userId'],$parameters['menuDatatypeId'],null);
         if($dataSet->count()==0){
             return $dataSet;
         }
@@ -321,7 +339,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 
     //个人组默认的动作，要求当前用户是该组的所有人
     public function personalAction($parameters){
-        if($parameters['groupId']<>$parameters['personalGroupId']){
+        if($parameters['menuGroupId']<>$parameters['personalGroupId']){
             return new Collection();
         }
         $repository=Zsystem::repository('permission');
