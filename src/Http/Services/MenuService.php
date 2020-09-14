@@ -27,9 +27,9 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
 //        if(!isset( $parameters['objectGroupId'])){
 //            $parameters['objectGroupId']=$this->getObjectGroupId($parameters);
 //        }
-//        if(!isset( $parameters['menuGroupId'])){
-//            $parameters['menuGroupId']=$this->getMenuGroupId($parameters);
-//        }
+        if(!isset( $parameters['menuGroupId'])&&isset($parameters['personalGroupId'])){
+            $parameters['menuGroupId']=$parameters['personalGroupId'];
+        }
 
         switch ($parameters['menuLever']) {
             case 1://只要顶级菜单
@@ -57,13 +57,8 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         return true;
     }
 
-    //前端请求菜单接口，计算出该菜单是在哪个组内；如果前端已经明确传递了menuGroupId，则使用前端的menuGroupId
+    //当用户不是平台owner和管理员，前端又没有传menuGroupId，需要将personalGroupId转为menuGroupId
     protected function getMenuGroupId($parameters){
-        //当personalGroupId为null，当前menuObjectId为null，那么currentGroupId为null，现在是全局搜索
-        //当personalGroupId为null，当前menuObjectId不为null，那么需要查看menuObjectId和menuDatatypeId对应的GroupId，
-        //这就是currentGroupId，如果为null，现在是全局搜索
-        //当personalGroupId不为null，当前menuObjectId为null，那么currentGroupId为personalGroupId
-        //当personalGroupId不为null，当前menuObjectId也不为null，那么currentGroupId为menuObjectId和menuDatatypeId对应的GroupId
         if(!isset($parameters['personalGroupId'])){
             if(!isset($parameters['menuObjectId'])){
                 return null;
@@ -151,20 +146,36 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         //点击action,必传menuActionId
         $datatypes=null;
         $actions=null;
+        $menuGroupId=null;
+        $objectGroupId=null;
         switch($parameters['menuType']){
             case 1://点击action
+                if(isset($parameters['menuGroupId'])){
+                    $menuGroupId =$parameters['menuGroupId'];
+                }
+                if(isset($parameters['objectGroupId'])){
+                    $objectGroupId =$parameters['objectGroupId'];
+                }
                 $actions=$this->availableAction($parameters);
                 if($this->getActionsHasDatatype($parameters['menuActionId'])){
                         $datatypes=$this->availableDatatype($parameters);
                 }
-                return ['datatype'=>$datatypes,'action'=>$actions,'menuGroupId'=>$parameters['menuGroupId'],'objectGroupId'=>$parameters['objectGroupId']];
+                return ['datatype'=>$datatypes,'action'=>$actions,'menuGroupId'=>$menuGroupId,'objectGroupId'=>$objectGroupId];
             default://点击datatype
-                //因为这里开始切换当前组了，所以要处理一下参数，
-                $menuGroupId=$parameters['objectGroupId'];
-                $parameters=Arr::forget($parameters,['menuGroupId','objectGroupId']);
-                $parameters['menuGroupId']=$menuGroupId;
+                $menuGroupId=null;
+                if(isset($parameters['objectGroupId'])){
+                    //因为这里开始切换当前组了，所以要处理一下参数：如果点击了组列表，就会有objectGroupId，否则不用切换组
+                    $menuGroupId=$parameters['objectGroupId'];
+                    Arr::forget($parameters,['menuGroupId','objectGroupId']);
+                    $parameters['menuGroupId']=$menuGroupId;
+                }else{
+                    //如果没有传objectGroupId，那就还用原来的group，不切换组
+                    if(isset($parameters['menuGroupId'])){
+                        $menuGroupId=$parameters['menuGroupId'];
+                    }
+                }
                 $actions=$this->availableAction($parameters);
-                return ['datatype'=>null,'action'=>$actions,'menuGroupId'=>$parameters['objectGroupId']];
+                return ['datatype'=>null,'action'=>$actions,'menuGroupId'=>$menuGroupId];
         }
 
 //        if(isset($parameters['menuActionId'])){
@@ -194,7 +205,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     public function allMenus($parameters){
         $topMenus=$this->topMenus($parameters);
         if(!isset($parameters['menuDatatypeId'])){
-            $datatype=$topMenus[0];
+            $datatype=$topMenus->datatype[0];
             $parameters['menuDatatypeId']=$datatype->id;
         }
         $secondMenus=$this->secondMenus($parameters);
@@ -343,7 +354,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
             return new Collection();
         }
         $repository=Zsystem::repository('permission');
-        $dataSet=$repository->index(['personal'=>1]);
+        $dataSet=$repository->index(['personal'=>1,'datatype_id'=>$parameters['menuDatatypeId']]);
         if($dataSet->count()==0){
             return $dataSet;
         }
