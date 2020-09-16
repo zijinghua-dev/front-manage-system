@@ -4,7 +4,6 @@ namespace Zijinghua\Zvoyager\Http\Middlewares;
 
 use Closure;
 use Symfony\Component\HttpFoundation\Response;
-use Tymon\JWTAuth\Http\Middleware\BaseMiddleware;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 
 class Authenticate extends Middleware
@@ -20,7 +19,14 @@ class Authenticate extends Middleware
      */
     public function handle($request, Closure $next, ...$guards)
     {
-        $token = $this->authenticate($request, $guards);
+        $guard = $this->authenticate($request, $guards);
+
+        if ($guard) {
+            $token = $this->getToken($guard);
+        } else {
+            $response = $this->toResponse();
+            return new Response(json_encode($response));
+        }
 
         $response = $next($request);
 
@@ -54,12 +60,11 @@ class Authenticate extends Middleware
         foreach ($guards as $guard) {
             if ($this->auth->guard($guard)->check()) {
                 $this->auth->shouldUse($guard);
-                $token = $this->getToken($guard);
-                return $token;
+                return $guard;
             }
         }
 
-        $this->unauthenticated($request, $guards);
+        return false;
     }
 
     /**
@@ -79,5 +84,22 @@ class Authenticate extends Middleware
             $token = $zgaurd->refresh();
         }
         return $token;
+    }
+
+    /**
+     * 创建失败返回数据结构
+     * @return array
+     * @throws \Exception
+     */
+    protected function toResponse()
+    {
+        $response = [
+            'data' => [],
+            'code' => getConfigValue('zbasement.code.auth.login.validation.failed.code'),
+            'status' => false,
+            'httpCode' => 401,
+            'message' => getConfigValue('zbasement.code.auth.login.submit.failed.message'),
+        ];
+        return $response;
     }
 }
