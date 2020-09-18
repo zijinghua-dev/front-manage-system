@@ -274,17 +274,20 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
         $repository=$this->repository('organize');
         $result=$repository->store($data);
         unset($data);
-        $data=Arr::only($parameters,['userId','groupId','datatypeId']);
+        //不是个人组，不记录userId，ownerId为null
+        $data=Arr::only($parameters,['groupId','datatypeId']);
         $data['objectId']=$result->id;
         $group= parent::store($data);//保存group和family
         //重新将获得的groupID保存到organize里
         $repository=$this->repository('organize');
-        $result=$repository->update(['id'=>$result->id,'group_id'=>$group->id]);
-//        $result->groupId=$group->id;
+        $repository->update(['id'=>$result->id,'group_id'=>$group->id]);
+        $result->group_id=$group->id;
         return $result;
     }
 
-    //如果一个普通用户有权创建组，父组应当是当前组，创建完毕后，应当把用户加到当前组，给当前用户赋予默认的owner角色，这样，用户能够继续给组添加角色，添加权限，添加用户
+    //如果一个普通用户有权创建组，父组应当是当前组，创建完毕后，应当把用户加到当前组，给当前用户赋予默认的owner角色，
+    //这样，用户能够继续给组添加角色，添加权限，添加用户
+    //个人组内有一个owner子组，如果用户被授予创建某种对象，放在这个子组里
     public function store($parameters)
     {
         DB::beginTransaction();
@@ -295,11 +298,13 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
             $service=Zsystem::service('authorize');
             if(!$service->isPlatformOwner($parameters['userId'])&&!$service->isPlatformAdmin($parameters['userId'])){
                 $data=['groupId'=>$result->group_id,'userId'=>$parameters['userId']];
-                $this->addUserToGroup($data);//添加用户到组内
-                $this->authorizeOwner($data);//给用户配置默认所有人角色
+                parent::addUserToGroup($data);//添加用户到组内
+                $data=['groupId'=>$result->group_id,'userId'=>$parameters['userId']];
+                parent::authorizeOwner($data);//给用户配置默认所有人角色
                 $data=['userId'=>$parameters['userId'],'datatypeId'=>$parameters['datatypeId'],'objectId'=>$result->id];
                 //因为当前用户是创建者，拥有index权限，所以将该组添加到该用户的个人组；其他地方应当判断是否有index权限，没有权限，不能添加到个人组
-                $this->addObjectToPersonalGroup($data);//添加用户的个人组
+                parent::addObjectToPersonalGroup($data);//把刚刚创建的组添加到用户的个人组，方便用户索引；
+//                parent::addObjectToPersonalOwnerGroup($data);
             }
             DB::commit();
 
@@ -313,38 +318,33 @@ class OrganizeService extends GroupService implements OrganizeServiceInterface
         return $messageResponse;
     }
 
-    protected function addUserToGroup($parameters){
-        $repository=$this->repository('datatype');
-        $userDatatypeId=$repository->key('user');
-        $repository=$this->repository('groupObject');
-        $result=$repository->store(['datatype_id'=>$userDatatypeId,'object_id'=>$parameters['userId'],'group_id'=>$parameters['groupId']]);
+    //仅供系统内部调用，用于创建顶级组。比如，用户缴费后，触发本方法，自动创建一个顶级组
+    //顶级组需要连带创建几个模板角色，角色，权限要放入该顶级组
+    //不太容易让平台管理员创建顶级组，因为要配置owner角色，需要传入userId，平台管理员创建之后，要转让给其他用户
+    public function createTopGroup($parameters)
+    {
+        $result=$this->create($parameters);
+        //如果当前用户不是平台owner和admin
+        parent::addTemplateRoleToGroup($data);
+        parent::addPermissionToGroup($data);
+            $data=['groupId'=>$result->group_id,'userId'=>$parameters['userId']];
+            parent::addUserToGroup($data);//添加用户到组内
+            $data=['groupId'=>$result->group_id,'userId'=>$parameters['userId']];
+            parent::authorizeOwner($data);//给用户配置默认所有人角色
+            $data=['userId'=>$parameters['userId'],'datatypeId'=>$parameters['datatypeId'],'objectId'=>$result->id];
+            //因为当前用户是创建者，拥有index权限，所以将该组添加到该用户的个人组；其他地方应当判断是否有index权限，没有权限，不能添加到个人组
+            parent::addObjectToPersonalGroup($data);//把刚刚创建的组添加到用户的个人组，方便用户索引；
     }
+//    protected function addUserToGroup($parameters){
+//        $repository=$this->repository('datatype');
+//        $userDatatypeId=$repository->key('user');
+//        $repository=$this->repository('groupObject');
+//        $result=$repository->store(['datatype_id'=>$userDatatypeId,'object_id'=>$parameters['userId'],'group_id'=>$parameters['groupId']]);
+//    }
 
-    protected function authorizeOwner($parameters){
-        //先找owner角色
-        $repository=$this->repository('role');
-        $ownerRole=$repository->fetch(['name'=>'owner','default'=>1]);
-        if(!isset($ownerRole)){
-            return;//这里要报异常
-        }
-        //为用户添加角色
-        $repository=$this->repository('groupUserRole');
-        $result=$repository->store(['group_id'=>$parameters['groupId'],'role_id'=>$ownerRole->id,'user_id'=>$parameters['userId']]);
-    }
 
-    protected function addObjectToPersonalGroup($parameters){
-        //当前用户是否有个人组
-        $repository=$this->repository('group');
-        $result=$repository->fetch(['owner_id'=>$parameters['userId'],'owner_group_id'=>null]);
-        if(!isset($result)){
-            return;
-        }
-        $repository=$this->repository('datatype');
-        $groupDatatypeId=$repository->key('group');
-        $repository=$this->repository('groupObject');
-        $result=$repository->store(['datatype_id'=>$parameters['datatypeId'],'object_id'=>$parameters['objectId'],
-            'group_id'=>$result->id]);
-    }
+
+
 
 //    public function expand($parameters){
 //        $model=$this->model('groupDatatype');

@@ -162,7 +162,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
                 }
                 return ['datatype'=>$datatypes,'action'=>$actions,'menuGroupId'=>$menuGroupId,'objectGroupId'=>$objectGroupId];
             default://点击datatype
-                $menuGroupId=null;
+//                $menuGroupId=null;
                 if(isset($parameters['objectGroupId'])){
                     //因为这里开始切换当前组了，所以要处理一下参数：如果点击了组列表，就会有objectGroupId，否则不用切换组
                     $menuGroupId=$parameters['objectGroupId'];
@@ -339,6 +339,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         if($dataSet->count()==0){
             return $dataSet;
         }
+        //过滤掉不应该展示在菜单上的权限，通常是三元操作符的后一个操作，因为，前
         $ids=$dataSet->pluck('action_id')->unique()->toArray();
         if(emptyObjectOrArray($ids)){
             return new Collection();

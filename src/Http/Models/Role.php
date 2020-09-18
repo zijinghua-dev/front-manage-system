@@ -11,4 +11,20 @@ class Role extends BaseModel implements RoleModelInterface
 {
     protected $table='roles';
     protected $fillable=['name','display_name'];
+
+    public function permission(){
+        //首先返回
+        $result=$this->belongsToMany('\Zijinghua\Zvoyager\Http\Models\Permission',
+            'group_role_permissions',
+            'role_id','permission_id');
+        return $result;
+    }
+
+    public function permissionRole(){
+        //首先返回
+        $result=$this->belongsToMany('\Zijinghua\Zvoyager\Http\Models\Permission',
+            'permission_role',
+            'role_id','permission_id');
+        return $result;
+    }
 }

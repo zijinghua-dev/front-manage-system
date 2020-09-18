@@ -31,7 +31,8 @@ class OrganizeController extends BaseGroupController
         return $this->execute($request,'shrink');
     }
 
-    //组的创建是特殊的，必须要有父组
+    //组的创建。不能创建默认组,default!=null。
+    //输入参数。必传：name;userId（写入到creator_id）；可选：groupId，可能为null；default，如果有，必须为null;picture;describe
     public function store(StoreRequest $request){
         return $this->execute($request,'store');
     }

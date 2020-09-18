@@ -12,4 +12,8 @@ class RoleController extends BaseController
     public function assign(Request $request){
         return  $this->execute($request,'assign');
     }
+
+    public function setup(Request $request){
+        return  $this->execute($request,'setup');
+    }
 }

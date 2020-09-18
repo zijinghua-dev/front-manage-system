@@ -418,11 +418,13 @@ class AuthorizeService extends BaseService implements AuthorizeServiceInterface
         //检查在源组的权限。允许用户不在该组内，但操作对象一定要在该组内
         $result=$this->checkGroupRoleObjectPermissions($parameters);
 
-        if(isset($result)&&$result){
+        if(isset($result)&&($result->count()>0)){
             //检查在目的组的权限;如果是三元操作，必然要有objectId，可以没有有groupId，
             if($this->isTernaryAction($parameters['actionId'])) {
                 return $this->checkTernaryPermission($parameters);
             }
+        }else{
+            return;
         }
         return $result;
     }
