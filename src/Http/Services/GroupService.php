@@ -247,6 +247,7 @@ class GroupService extends BaseGroupService
     //返回创建的group记录,如果有父组，还要在groupObject中创建一条记录
     public function store($parameters)
     {
+        //先创建组
         if($this->getSlug()!='group'){
             $this->setSlug('group');
         }
@@ -267,6 +268,7 @@ class GroupService extends BaseGroupService
 //            $data['schedule_end']=$parameters['scheduleEnd'];
 //        }
         $result=$repository->store($data);
+        //如果有父组，还要把本组放进父组，更改groupFamily和groupParent
         if(isset($parameters['groupId'])){
             unset($data);
             $data=Arr::only($parameters,['datatypeId','objectId','groupId']);
@@ -309,40 +311,6 @@ class GroupService extends BaseGroupService
         //如果传递了角色名称，则进一步筛选
         $ids=[];
         $search=null;
-//        if(isset($parameters['role'])){
-//            $repository=$this->repository('role');
-//            $roleId=$repository->key($parameters['role']);
-//
-//            if(isset($roleId)){
-//                $search['search'][]=['field'=>'role_id','value'=>$roleId,'filter'=>'=','algorithm'=>'and'];
-//            }
-//            if(isset($parameters['groupId'])){
-//                $search['search'][]=['field'=>'group_id','value'=>$parameters['groupId'],'filter'=>'=','algorithm'=>'and'];
-//            }
-//            $repository=$this->repository('groupUserRole');
-//            $search['search'][]=['field'=>'user_id','value'=>$parameters['userId'],'filter'=>'=','algorithm'=>'and'];
-//            $result=$repository->index($search);
-//            if($result->count()==0){
-//                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-//                return $messageResponse;
-//            }
-//            $ids=array_unique($result->pluck('group_id')->toArray());
-//            if(!$ids){
-//                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-//                return $messageResponse;
-//            }
-//            //这些组是需要的数据类型吗？
-//            $repository=$this->repository($parameters['slug']);
-//            unset($search);
-//            $search['search'][]=['field'=>'group_id','value'=>$ids,'filter'=>'in','algorithm'=>'or'];
-//            $result=$repository->index($search);
-//            if($result->count()==0){
-//                $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.failed');
-//                return $messageResponse;
-//            }
-//            $messageResponse=$this->messageResponse($this->getSlug(),'index.submit.success',$result);
-//            return $messageResponse;
-//        }
 
         //如果没有限制角色，则把所有的子组取出来
         if(isset($parameters['groupId'])){
@@ -373,7 +341,34 @@ class GroupService extends BaseGroupService
         }
         $repository=$this->repository($parameters['slug']);
         $result=$repository->index($search);
+        //current_group_id，
         $messageResponse=$this->messageResponse($parameters['slug'],'index.submit.success',$result);
+        return $messageResponse;
+    }
+
+    public function show($data){
+        $repository=$this->repository($this->getSlug());
+        $result=$repository->show($data);
+        //因为当前是组类型，所以，要返回特定标志currentGroupId
+
+        $resource=$this->getResource($this->getSlug(),'show');
+        $messageResponse=$this->messageResponse($this->getSlug(),'show.submit.success', $result,$resource,['objectGroupId'=>$result->group_id]);
+        return $messageResponse;
+    }
+
+    public function update($parameters){
+        $repository=$this->repository($this->getSlug());
+        $result=$repository->update($parameters);
+        if(isset($result)){
+            $result=$repository->show(['id'=>$parameters['id']]);
+        }else{
+            $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.failed');
+            return $messageResponse;
+        }
+        //如果$result为null或空，那么意味着刚刚删除掉这个数据，应该报异常
+//        $code='zbasement.code.'.$this->slug.'.show.success';
+        $resource=$this->getResource($this->getSlug(),'show');
+        $messageResponse=$this->messageResponse($this->getSlug(),'update.submit.success', $result,$resource);
         return $messageResponse;
     }
 
