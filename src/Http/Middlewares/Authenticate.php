@@ -37,7 +37,6 @@ class Authenticate extends Middleware
         } else {
             $result = $response;
         }
-
         return $result;
     }
 
@@ -80,7 +79,7 @@ class Authenticate extends Middleware
         $zgaurd = auth($driver);
         $payload = $zgaurd->getPayload()->get();
         $freshPeriod = getConfigValue('zbasement.token.refresh_period');
-        if (($payload['exp'] - time()) < $freshPeriod) {
+        if ((time() - ($payload['iat'])) >= $freshPeriod) {
             $token = $zgaurd->refresh();
         }
         return $token;
