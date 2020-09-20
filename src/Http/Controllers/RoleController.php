@@ -13,7 +13,7 @@ class RoleController extends BaseController
         return  $this->execute($request,'assign');
     }
 
-    public function setup(Request $request){
-        return  $this->execute($request,'setup');
+    public function relation(Request $request){
+        return  $this->execute($request,'relation');
     }
 }

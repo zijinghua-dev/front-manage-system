@@ -98,7 +98,7 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::put('/', 'RoleController@update');
             Route::delete('/', 'RoleController@delete');//批量删除，参数名为uuid，可以传array
             Route::post('/assign', 'RoleController@assign');//给角色授予权限；
-            Route::post('/setup', 'RoleController@setup');//查询角色的权限配置；
+            Route::post('/relation', 'RoleController@relation');//查询角色的权限配置；
 //            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
         });
 

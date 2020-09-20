@@ -4,32 +4,33 @@
 namespace Zijinghua\Zvoyager\Http\Repositories;
 
 
+use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zbasement\Http\Repositories\BaseRepository;
 use Zijinghua\Zvoyager\Http\Contracts\RoleRepositoryInterface;
 
 class RoleRepository extends BaseRepository implements RoleRepositoryInterface
 {
-    public function setup($parameters)
+    public function relation($parameters)
     {
-        //roleId为空，返回全部角色的权限
+        //roleId为空，获取该组全部角色，返回对应的权限
         $data['group_id']=$parameters['groupId'];
 
         if(isset($parameters['roleId'])){
             $data['role_id']=$parameters['roleId'];
-            $model=$this->model('permission');
-            $result=$model::whereHas('GroupRolePermission')->get();
-            $result=$model::whereHas('GroupRolePermission', function ($query) use ($data){
-                foreach ($data as $key=>$value){
-                    $query->where($key, '=', $value);
-                }
-            });
-            $result=$result->get();
-
         }
-        $dataset=parent::pivotFilter('permission',$parameters);
-        $dataset=$dataset->get();
-        //检查是否是默认角色
-        $default=parent::pivotFilter('permissionRole',$parameters);
-        return $this->messageResponse($this->getSlug(),'show.submit.success',$dataset);
+        //用户为角色自定义配置的权限
+        $custom=parent::pivotFilter('permission',$data);
+        $customSet=$custom->get();
+        //系统配置默认角色的权限，如果是默认角色，查看对应权限；如果是
+        $data=[];
+        if(isset($parameters['roleId'])){
+            $data['role_id']=$parameters['roleId'];
+        }
+        $default=parent::pivotFilter('permissionRole',$data);
+        $defaultSet=$default->get();
+        if($defaultSet->count()){
+            $customSet->merge($defaultSet);
+        }
+        return $customSet;
     }
 }
