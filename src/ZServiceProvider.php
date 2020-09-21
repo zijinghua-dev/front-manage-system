@@ -9,6 +9,7 @@ use Zijinghua\Zvoyager\Http\Contracts\GroupFamilyModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupParentModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GroupRepositoryInterface;
 //use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
+use Zijinghua\Zvoyager\Http\Contracts\GroupRolePermissionServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GuopModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\GurModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\MenuServiceInterface;
@@ -19,6 +20,7 @@ use Zijinghua\Zvoyager\Http\Contracts\ParameterServiceInterface;
 use Zijinghua\Zvoyager\Http\Contracts\PermissionModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\PermissionRoleModelInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleModelInterface;
+use Zijinghua\Zvoyager\Http\Contracts\RoleRepositoryInterface;
 use Zijinghua\Zvoyager\Http\Contracts\RoleServiceInterface;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckExternalNames;
 use Zijinghua\Zvoyager\Http\Middlewares\CheckGroup;
@@ -62,6 +64,7 @@ use Zijinghua\Zvoyager\Http\Models\Group;
 use Zijinghua\Zvoyager\Http\Models\GroupDatatype;
 use Zijinghua\Zvoyager\Http\Models\GroupUserPermission;
 use Zijinghua\Zvoyager\Http\Repositories\GroupRepository;
+use Zijinghua\Zvoyager\Http\Repositories\RoleRepository;
 use Zijinghua\Zvoyager\Http\Resources\UserResource;
 use Zijinghua\Zvoyager\Http\Contracts\AuthServiceInterface;
 
@@ -75,6 +78,7 @@ use Illuminate\Foundation\AliasLoader;
 use Zijinghua\Zvoyager\Guards\ZGuard;
 
 use Zijinghua\Zvoyager\Http\Services\DatatypeService;
+use Zijinghua\Zvoyager\Http\Services\GroupRolePermissionService;
 use Zijinghua\Zvoyager\Http\Services\OrganizeService;
 use Zijinghua\Zvoyager\Http\Services\MenuService;
 use Zijinghua\Zvoyager\Http\Services\ParameterService;
@@ -257,6 +261,16 @@ class ZServiceProvider extends BaseServiceProvider
         $loader->alias('permissionRoleModel', PermissionRoleModelInterface::class);
         $this->app->bind('permissionRoleModel', function () {
             return new PermissionRole();
+        });
+
+        $loader->alias('groupRolePermissionService', GroupRolePermissionServiceInterface::class);
+        $this->app->bind('groupRolePermissionService', function () {
+            return new GroupRolePermissionService();
+        });
+
+        $loader->alias('roleRepository', RoleRepositoryInterface::class);
+        $this->app->bind('roleRepository', function () {
+            return new RoleRepository();
         });
     }
     public function boot(Router $router, Dispatcher $event)

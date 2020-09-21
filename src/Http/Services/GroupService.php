@@ -384,4 +384,57 @@ class GroupService extends BaseGroupService
         $repository=$this->repository('group');
         return $repository->firstOrCreate($user);
     }
+
+    protected function addUserToGroup($parameters){
+        $repository=$this->repository('datatype');
+        $userDatatypeId=$repository->key('user');
+        $repository=$this->repository('groupObject');
+        $result=$repository->store(['datatype_id'=>$userDatatypeId,'object_id'=>$parameters['userId'],'group_id'=>$parameters['groupId']]);
+    }
+
+    //让当前用户变成当前组的owner角色
+    //当前组给予单独权限，可以删除该组
+    protected function authorizeOwner($parameters){
+        //先找owner角色
+        $repository=$this->repository('role');
+        $ownerRole=$repository->fetch(['name'=>'groupOwner','default'=>1]);
+        if(!isset($ownerRole)){
+            return;//这里要报异常
+        }
+        //为用户添加角色
+        $repository=$this->repository('groupUserRole');
+        $result=$repository->store(['group_id'=>$parameters['groupId'],'role_id'=>$ownerRole->id,'user_id'=>$parameters['userId']]);
+    }
+
+    protected function addObjectToPersonalGroup($parameters){
+        //当前用户是否有个人组
+        $repository=$this->repository('group');
+        $result=$repository->fetch(['owner_id'=>$parameters['userId'],'owner_group_id'=>null]);
+        if(!isset($result)){
+            return;
+        }
+//        $repository=$this->repository('datatype');
+//        $groupDatatypeId=$repository->key('group');
+        $repository=$this->repository('groupObject');
+        $result=$repository->store(['datatype_id'=>$parameters['datatypeId'],'object_id'=>$parameters['objectId'],
+            'group_id'=>$result->id]);
+    }
+
+//    protected function addObjectToPersonalOwnerGroup($parameters){
+//        //当前用户是否有个人组
+//        $repository=$this->repository('group');
+//        $result=$repository->fetch(['owner_id'=>$parameters['userId'],'owner_group_id'=>null]);
+//        if(!isset($result)){
+//            return;
+//        }
+//        //找到个人组中的owner子组
+//        $repository=$this->repository('group');
+//        $ownerChildGroup=$repository->fetch(['owner_group_id'=>$result->id,'name'=>'owner']);
+//        if(!isset($result)){
+//            return;
+//        }
+//        $repository=$this->repository('groupObject');
+//        $result=$repository->store(['datatype_id'=>$parameters['datatypeId'],'object_id'=>$parameters['objectId'],
+//            'group_id'=>$ownerChildGroup->id]);
+//    }
 }

@@ -30,6 +30,8 @@ class GroupRepository extends BaseRepository implements GroupRepositoryInterface
     {
         /* @var $model Group */
         $model=Zsystem::model($this->getSlug());
-        return $model->firstOrCreate(['owner_id'=>$user->id]);
+        $group = $model->firstOrCreate(['owner_id'=>$user->id]);
+        Zsystem::repository('organize')->save(['group_id' => $group->id, 'name'=>'个人组']);
+        return $group;
     }
 }

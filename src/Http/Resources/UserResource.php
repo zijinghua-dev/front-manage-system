@@ -23,7 +23,8 @@ class UserResource extends JsonResource
             'username'=>@$this->resource['username'],
             'email'=>@$this->resource['email'],
             'mobile'=>@$this->resource['mobile'],
-            'wechat_id'=>@$this->resource['wechat_id'],
+            'avatar'=>@$this->resource['avatar'],
+            'nickname'=>@$this->resource['nickname'],
             'created_at'=>@$this->resource['created_at'],
             'updated_at'=>@$this->resource['updated_at'],
         ];

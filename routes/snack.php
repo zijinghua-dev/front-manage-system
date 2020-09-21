@@ -59,7 +59,7 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::post('/clear', 'UserController@clear');
             Route::post('/delete', 'UserController@delete');
             Route::post('/add', 'UserController@add');
-            Route::post('/assign', 'UserController@assign');
+            Route::post('/assign', 'UserController@assign');//为用户配置角色
 
         });
 
@@ -97,7 +97,8 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::post('/search', 'RoleController@search');
             Route::put('/', 'RoleController@update');
             Route::delete('/', 'RoleController@delete');//批量删除，参数名为uuid，可以传array
-            Route::post('/assign', 'RoleController@assign');//给角色授予权限；给用户授予角色
+            Route::post('/assign', 'RoleController@assign');//给角色授予权限；
+            Route::post('/relation', 'RoleController@relation');//查询角色的权限配置；
 //            Route::post('/clear', 'DatatypeController@clear');//从组内移除对象，并不删除，参数名为uuid，可以传array
         });
 
@@ -110,6 +111,10 @@ Route::group(['middleware' => ['api','setRequestParameters']], function () {
             Route::put('/', 'PermissionController@update');
             Route::delete('/', 'PermissionController@delete');//批量删除，参数名为uuid，可以传array
         });
+
+//        Route::group(['prefix' => 'groupRolePermission'], function () {
+//            Route::post('show', '\Zijinghua\Zbasement\Http\Controllers\BaseController@show');
+//        });
     });
 //baseservice对某个对象的删除\移除出群\
 //对某个对象添加操作方法，移除操作方法，
