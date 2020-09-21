@@ -4,7 +4,8 @@
     "type": "library",
     "require": {
         "illuminate/support": "~5.5|~6.0",
-        "guzzlehttp/guzzle": "~6.0"
+        "guzzlehttp/guzzle": "~6.0",
+        "zijinghua-dev/zwechat_client": "^1.0.7"
     },
     "autoload": {
         "psr-4": {
