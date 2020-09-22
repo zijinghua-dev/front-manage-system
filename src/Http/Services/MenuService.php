@@ -339,7 +339,11 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         if($dataSet->count()==0){
             return $dataSet;
         }
-        //过滤掉不应该展示在菜单上的权限，通常是三元操作符的后一个操作，因为，前
+        //三元操作符的后一个操作，前一个操作有权限，执行后一个操作还需要另外判断权限
+        //如果没有groupId，过滤掉依赖group的操作
+        if(!isset($parameters['groupId'])){
+            $dataSet=$dataSet->where('depend_group',null);
+        }
         $ids=$dataSet->pluck('action_id')->unique()->toArray();
         if(emptyObjectOrArray($ids)){
             return new Collection();
@@ -371,6 +375,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     //输入参数：groupId,datatypeId,userId
     //输出参数：actionId集合
     //如果是个人组，默认有index权限
+    //有一部分action依赖groupId，全局状态下没有操作
     public function availableAction($parameters){
         //平台管理员和owner对一个对象类型，可以操作所有的动作
         if(!isset($parameters['personalGroupId'])){
@@ -391,6 +396,11 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
     public function allAction($parameters){
         $datatypeId=$parameters['menuDatatypeId'];
         $repository=$this->repository('permission');
+        $data['datatype_id']=$datatypeId;
+        if(!isset($parameters['groupId'])){
+            $data['depend_group']=1;
+        }
+
         $dataSet=$repository->index(['datatype_id'=>$datatypeId]);
         if($dataSet->count()==0){
             return $dataSet;

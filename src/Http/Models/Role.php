@@ -27,4 +27,10 @@ class Role extends BaseModel implements RoleModelInterface
             'role_id','permission_id');
         return $result;
     }
+
+    public function object(){
+        //首先返回
+        $result=$this->hasMany('\Zijinghua\Zvoyager\Http\Models\GroupObject');
+        return $result;
+    }
 }
