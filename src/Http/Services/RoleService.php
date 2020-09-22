@@ -4,6 +4,7 @@
 namespace Zijinghua\Zvoyager\Http\Services;
 
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Zijinghua\Zvoyager\Http\Contracts\RoleServiceInterface;
@@ -137,34 +138,60 @@ class RoleService extends BaseGroupService implements RoleServiceInterface
 
 //默认角色不分配到各组，系统自动将创始人配置owner角色，只有平台admin组可以index/编辑默认角色
 //模板角色分配在公共组，所有用户都可以看到模板角色，但模板角色不能分享，只能复制到各组
+//为用户赋予角色有两种分配形式：默认角色直接在groupUserRole里面分配，其他角色还要放置到groupObject中
+//获取角色的权限在两个表：groupRolePermission和rolePermission
 //role的relation主要是配置permission。
 //如果有多个relation关系需要配置，比如，用户和组，用户和角色，用户和权限，有个方案：1，转化为容器，2，每个方法单独定义；
 //3，全部用一个方法，用参数区分，公用一个权限
 //角色配置页面入口，返回该组某角色下已经配置好的权限
-//输入参数：roleId为空，返回该组全部角色的全部;group_id必传，group为null则直接返回空列表
     public function relation($parameters)
     {
-        $repository=$this->repository();
-        //groupId不能为空，默认角色不在grouprolepermission表，而是rolepermission表里
-        //roleId为空，获取该组全部角色，返回对应的权限
-        //不能groupId和roleId为空同时出现
-//        if(isset($parameters['group_id'])) {
-            $data['group_id'] = $parameters['groupId'];
-//        }
+        $groupId = $parameters['groupId'];
         if(isset($parameters['roleId'])){
-            $data['role_id']=$parameters['roleId'];
+            if(is_array($parameters['roleId'])){
+                $roleIds=$parameters['roleId'];
+            }else{
+                $roleIds[]=$parameters['roleId'];
+            }
+        }else{
+            //首先在groupObject把该组的自定义角色全部提取出来
+            //各个组的默认角色不在groupObject里，直接分配到groupUserRole了，仅仅只有admin组才存有默认角色，到rolePermission中提取permission
+            //如果不是默认角色，到groupRolePermission中提取
+            $repository=$this->repository('datatype');
+            $roleDatatypeId=$repository->key('role');
+            $repository=$this->repository('groupObject');
+            $result=$repository->index(['group_id'=>$groupId,'datatype_id'=>$roleDatatypeId]);
+            if($result->count()==0){
+                return $this->messageResponse($this->getSlug(),'show.submit.failed');
+            }
+            $roleIds=$result->pluck('object_id')->toArray();
         }
-        //用户为角色自定义配置的权限
-        $customSet=$repository->pivotFilter('permission',$data);
 
-        //系统配置默认角色的权限，如果是默认角色，查看对应权限；如果是
-        $data=[];
-        if(isset($parameters['roleId'])){
-            $data['role_id']=$parameters['roleId'];
+        $repository=$this->repository('role');
+        $search['search'][]=['field'=>'id','value'=>$roleIds,'filter'=>'in','algorithm'=>'or'];
+        $result=$repository->index($search);
+        if($result->count()==0){
+            return $this->messageResponse($this->getSlug(),'show.submit.failed');
         }
-        $defaultSet=$repository->pivotFilter('permissionRole',$data);
+        $defaultRoleIds=$result->where('default',1)->pluck('id')->toArray();
+        $templateRoleIds=$result->where('template',1)->pluck('id')->toArray();
+        $dtRoleIds=array_merge($defaultRoleIds,$templateRoleIds);
+        $customRoleIds=$result->where('default','!=',1)->Where('template','!=',1)->pluck('id')->toArray();
+
+        $defaultSet=new Collection();
+        $customSet=new Collection();
+        $data['group_id']=$groupId;
+        if($dtRoleIds){
+            $data['role_id']=$dtRoleIds;
+            $defaultSet=$repository->pivotFilter('permissionRole',$data);
+        }
+        if($customRoleIds){
+            $data['role_id']=$customRoleIds;
+            $customSet=$repository->pivotFilter('permission',$data);
+        }
+
         if($defaultSet->count()){
-            $customSet->merge($defaultSet);
+            $customSet=$customSet->merge($defaultSet);
         }
         return $this->messageResponse($this->getSlug(),'show.submit.success',$customSet);
     }
