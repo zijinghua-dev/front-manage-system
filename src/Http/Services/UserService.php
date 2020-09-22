@@ -22,7 +22,8 @@ class UserService extends BaseGroupService implements UserServiceInterface
         //所以，第三方账号，如wechat_id，都已经解密
         //第三方账号注册时，不能注册密码
 
-        $credential=$this->getCredentials($data);
+//        $credential=$this->getCredentials($data);
+        $credential = $data;
         if(isset($credential['password'])){
             $password['password']=Hash::make($credential['password']);
             unset($credential['password']);

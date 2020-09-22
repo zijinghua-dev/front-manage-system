@@ -56,7 +56,7 @@ class ParameterService extends BaseService implements ParameterServiceInterface
             if (in_array($key, getConfigValue('zbasement.fields.auth.external'))) {
                 try {
 //                    $key = encrypt( $data[$key] );
-                    $data[$key] = decrypt($data[$key]);
+//                    $data[$key] = decrypt($data[$key]);
                 } catch (DecryptException $e) {
                     //这里应该再包装异常，放进response格式
                     throw new Exception('wechatid不正确');

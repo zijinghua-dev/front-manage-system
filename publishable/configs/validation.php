@@ -9,7 +9,7 @@ return [
                         'min:2',
                         'max:255',
                         'regex:/^[^0-9]/',
-                        'required_without_all:email,mobile,account,wechat_id',
+                        'required_without_all:email,mobile,account,oauth_code',
                     ],
                     'action'=>[
                         'login',
@@ -53,10 +53,22 @@ return [
                 ],
 
             ],
-            'wechat_id' => [
+            'oauth_code' => [
                 [
                     'rule'=>[
                         'nullable',
+                        'min:6',
+                        'max:255',
+                    ],
+                    'action'=>[
+                        'login',
+                    ],
+                ],
+            ],
+            'code_type' => [
+                [
+                    'rule'=>[
+                        'in:base,userinfo',
                         'min:6',
                         'max:255',
                     ],
