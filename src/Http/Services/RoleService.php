@@ -7,18 +7,51 @@ namespace Zijinghua\Zvoyager\Http\Services;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
+use Zijinghua\Zbasement\Facades\Zsystem;
 use Zijinghua\Zvoyager\Http\Contracts\RoleServiceInterface;
 
 class RoleService extends BaseGroupService implements RoleServiceInterface
 {
     public function store($parameters){
         //创建角色
-        //如果带groupId，这个角色就只能这个组用了，目前用户自己暂时不能创建角色
+        //如果在公共组创建角色，则为template角色，
+        //如果在admin组创建角色，则为默认角色
         if(isset($parameters['displayName'])){
             $data['display_name']=$parameters['displayName'];
         }
         $data['name']=$parameters['name'];
-        return parent::store($data);
+        $data['owner_group_id']=$parameters['groupId'];
+        $data['owner_id']=$parameters['userId'];
+        $data['datatype_id']=$parameters['datatypeId'];
+        DB::beginTransaction();
+        try {
+            $result = parent::store($data);
+            $authorizeService = Zsystem::service('authorize');
+            $adminGroup = $authorizeService->getPlatformAdminGroup();
+            if ($adminGroup->id == $data['owner_group_id']) {
+                //如果在admin组创建角色，则为默认角色
+                //默认角色还要更改角色的default字段
+                $result->default = 1;
+                $repository = $this->repository();
+                $repository->update(['id' => $result->id, 'default' => 1]);
+            } else {
+                $publicGroup = $authorizeService->getPublicGroup();
+                if ($publicGroup->id == $data['owner_group_id']) {
+                    //如果在admin组创建角色，则为默认角色
+                    //默认角色还要更改角色的default字段
+                    $result->template = 1;
+                    $repository = $this->repository();
+                    $repository->update(['id' => $result->id, 'template' => 1]);
+                }
+            }
+
+          DB::commit();
+            return $result;
+        } catch (Exception $e) {
+            DB::rollback();
+            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
+        }
+
     }
 
     public function update($parameters){

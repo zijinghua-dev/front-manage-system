@@ -132,18 +132,49 @@ class BaseGroupService extends BaseService
         return $messageResponse;
     }
 
+    //所有的对象创建，都必须在组内创建
+    //用户在公共组（默认不显示而已）；默认角色在admin，template角色在公共组，普通用户有index/show权限；
+    //权限在公共组，普通用户有index/show权限；
+    //推广页面在活动，卡在活动
     public function store($parameters)
     {
-        $parameters['owner_group_id']=$parameters['groupId'];
-        $parameters['owner_id']=$parameters['userId'];
-        return parent::store($parameters);
+        if(!isset( $parameters['owner_group_id'])){
+            $parameters['owner_group_id']=$parameters['groupId'];
+        }
+        if(!isset( $parameters['owner_id'])){
+            $parameters['owner_id']=$parameters['userId'];
+        }
+
+//        DB::beginTransaction();
+//        try{
+            //创建对象本身
+            $result= parent::store($parameters);
+            if(!isset($result->data)){
+                return $result;
+            }
+            //把对象加到组里
+            $this->addObject(['group_id'=>$parameters['owner_group_id'],'datatype_id'=>$parameters['datatype_id'],'object_id'=>$result->data->id]);
+//            DB::commit();
+            return $result;
+//        } catch (Exception $e) {
+//            DB::rollback();
+//            throw $e; //将exception继续抛出  生产环境可以修改为报错后的操作
+//        }
+
+    }
+
+    //把数据对象添加到组里
+    protected function addObject($parameters)
+    {
+        $repository=$this->repository('groupObject');
+        $result=$repository->save($parameters);
+        return $result;
     }
 
     //把数据对象添加到组里
     public function add($parameters)
     {
-        $repository=$this->repository('groupObject');
-        $result=$repository->save(['group_id'=>$parameters['groupId'],'datatype_id'=>$parameters['datatypeId'],
+        $result=$this->addObject(['group_id'=>$parameters['groupId'],'datatype_id'=>$parameters['datatypeId'],
             'object_id'=>$parameters['id']]);
         $messageResponse=$this->messageResponse($this->getSlug(),'add.submit.success', $result);
         return $messageResponse;
