@@ -99,6 +99,7 @@ class ZServiceProvider extends BaseServiceProvider
         }
         $this->registerService();
         $this->registerProvider();
+        $this->loadMigrationsFrom(realpath(__DIR__.'/../publishable/migration'));
     }
 
     private function registerProvider(){
