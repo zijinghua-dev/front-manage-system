@@ -108,7 +108,7 @@ class AuthService extends BaseService implements AuthServiceInterface
                 'login.submit.success',
                 $loginResult['user']->toArray(),
                 $resource,
-                ['token'=>$loginResult['token'], 'user_group' => $group->id]);
+                ['token'=>$loginResult['token'], 'userGroup' => $group->id]);
             return $messageResponse;
         }
 

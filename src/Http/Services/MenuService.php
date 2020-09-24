@@ -333,6 +333,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         return $authorzieDataset->intersect($dataSet);
     }
 
+    //groupId和menuGroupId：
     public function authorizeAction($parameters){
         $service=Zsystem::service('authorize');
         $dataSet=$service->getParentPermissions($parameters['menuGroupId'],$parameters['userId'],$parameters['menuDatatypeId'],null);
@@ -341,7 +342,7 @@ class MenuService extends BaseGroupService implements MenuServiceInterface
         }
         //三元操作符的后一个操作，前一个操作有权限，执行后一个操作还需要另外判断权限
         //如果没有groupId，过滤掉依赖group的操作
-        if(!isset($parameters['groupId'])){
+        if(!isset($parameters['menuGroupId'])){
             $dataSet=$dataSet->where('depend_group',null);
         }
         $ids=$dataSet->pluck('action_id')->unique()->toArray();
